@@ -1,6 +1,27 @@
 const allWorks = [];
 let categoriesIdList = [];
 let categories = [];
+let adminMode = sessionStorage.getItem("adminMode") ?? false;
+let token = sessionStorage.getItem("auth") ?? "";
+const bodyElem = document.querySelector("body");
+const loginCta = document.getElementById("login-cta");
+
+if(adminMode) {
+  bodyElem.classList.add("admin-mode");
+  loginCta.innerText = "Logout";
+  loginCta.addEventListener("click", (e) => disableAdminMode(e), {once: true});
+}
+
+function disableAdminMode(e) {
+  e.preventDefault();
+  bodyElem.classList.remove("admin-mode");
+  adminMode = false;
+  token = "";
+  sessionStorage.removeItem("adminMode");
+  sessionStorage.removeItem("auth");
+  loginCta.innerText = "Login";
+  // loginCta.removeEventListener("click", (e) => disableAdminMode(e));
+}
 
 // Get all the works from the server
 fetch(apiLocalPath + "/works").then(response => response.json()).then(data => {
@@ -11,7 +32,6 @@ fetch(apiLocalPath + "/works").then(response => response.json()).then(data => {
     displayWorks(allWorks);
     // Using Set object to store unique categories id ( => https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Set#d%C3%A9doublonner_un_tableau )
     categoriesIdList = [...new Set(allWorks.map(obj => obj.categoryId))];
-    console.log(categoriesIdList);
     // Store categories pairs {id, name}
     for (let i = 1; i <= categoriesIdList.length; i++) {
       let catIdAndName = allWorks.find((obj) => obj.categoryId === i).category;
@@ -27,7 +47,7 @@ function buildAndDisplayFilters(cat) {
   let filtersElement = document.createElement("div");
   // Create button "All" in any case to display all works
   let buttonAllCatElement = document.createElement("button");
-  let portfolioTitle = portfolioElement.querySelector("h2");
+  let portfolioTitle = portfolioElement.querySelector(".portfolio-title-block");
 
   filtersElement.classList.add("filtres");
   buttonAllCatElement.classList.add("button","active");

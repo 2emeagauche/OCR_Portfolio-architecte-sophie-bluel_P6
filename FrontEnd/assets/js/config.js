@@ -1,10 +1,4 @@
 const apiLocalPath = "http://localhost:5678/api";
-const users = [
-  {
-    email: "",
-    password: ""
-  }
-];
 
 const portfolioElement = document.querySelector("#portfolio");
 const galleryElement = document.querySelector(".gallery");

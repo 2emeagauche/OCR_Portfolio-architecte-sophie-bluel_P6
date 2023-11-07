@@ -17,15 +17,20 @@
   </head>
   <body>
     <header>
-      <h1>Sophie Bluel <span>Architecte d'intérieur</span></h1>
-      <nav>
-        <ul>
-          <li>projets</li>
-          <li>contact</li>
-          <li>login</li>
-          <li><img src="./assets/icons/instagram.png" alt="Instagram" /></li>
-        </ul>
-      </nav>
+      <div class="admin-info">
+        <p><img src="./assets/icons/admin-icon.svg" alt="" />Mode édition</p>
+      </div>
+      <div class="regular-content">
+        <h1>Sophie Bluel <span>Architecte d'intérieur</span></h1>
+        <nav>
+          <ul>
+            <li>projets</li>
+            <li>contact</li>
+            <li><a href="./admin-login.html" id="login-cta">login</a></li>
+            <li><img src="./assets/icons/instagram.png" alt="Instagram" /></li>
+          </ul>
+        </nav>
+      </div>
     </header>
     <main>
       <section id="introduction">
@@ -52,7 +57,14 @@
         </article>
       </section>
       <section id="portfolio">
-        <h2>Mes Projets</h2>
+        <div class="portfolio-title-block">
+          <h2>Mes Projets</h2>
+          <div class="button-cell">
+            <button class="edit-gallery">
+              <img src="./assets/icons/admin-icon.svg" alt="" />modifier
+            </button>
+          </div>
+        </div>
         <div class="gallery">
           <figure>
             <img src="assets/images/abajour-tahina.png" alt="Abajour Tahina" />
