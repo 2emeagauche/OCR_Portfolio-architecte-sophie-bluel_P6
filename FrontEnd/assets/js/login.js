@@ -1,3 +1,5 @@
+import {authentication} from "./api-requests.js";
+
 // manage login to admin mode
 
 const loginForm = document.querySelector("#login-form");
@@ -11,20 +13,11 @@ loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   let emailVal = emailField.value.trim();
   let passwordVal = passwordField.value.trim();
-  const loginResponse = await fetch(apiLocalPath + "/users/login", {
-    method: "POST",
-    body: `{
-      "email":"${emailVal}",
-      "password":"${passwordVal}"
-    }`,
-    headers: {
-      "Content-Type": "application/json"
-    }
-  }).then(response => response.json());
-  if(Object.keys(loginResponse).length > 1) {
-    enableAdminMode(loginResponse);
-  } else {
+  const loginResponse = await authentication(emailVal, passwordVal);
+  if (loginResponse.message === "user not found") {
     displayError();
+  } else {
+    enableAdminMode(loginResponse);
   }
 });
 

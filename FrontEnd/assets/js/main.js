@@ -1,19 +1,38 @@
 import {getAllWorks, getAllCategories} from "./api-requests.js";
 
-// Get all the works from the server
-const allWorks = await getAllWorks();
-// Get all the categories from the server
-const allCategories = await getAllCategories();
+// Get all the works from localStorage or server
+let allWorks = [];
+if (localStorage.getItem("allWorks")) {
+  allWorks = JSON.parse(localStorage.getItem("allWorks"));
+} else {
+  updateWorksList();
+}
 
-let adminMode = sessionStorage.getItem("adminMode") ?? false;
-let token = sessionStorage.getItem("auth") ?? "";
-const bodyElem = document.querySelector("body");
-const loginCta = document.getElementById("login-cta");
+// Used at first use or after admin modifications
+async function updateWorksList() {
+  allWorks = await getAllWorks();
+  localStorage.setItem("allWorks", JSON.stringify(allWorks));
+}
+
+// Get all the categories from localStorage or server
+let allCategories = [];
+if (localStorage.getItem("allCategories")) {
+  allCategories = JSON.parse(localStorage.getItem("allCategories"));
+} else {
+  allCategories = await getAllCategories();
+  localStorage.setItem("allCategories", JSON.stringify(allCategories));
+}
 
 // Display all works
 displayWorks(allWorks);
 // Build and display filters
 buildAndDisplayFilters(allCategories);
+
+
+let adminMode = sessionStorage.getItem("adminMode") ?? false;
+let token = sessionStorage.getItem("auth") ?? "";
+const bodyElem = document.querySelector("body");
+const loginCta = document.getElementById("login-cta");
 
 // Display admin mode on Home Page
 if(adminMode) {
@@ -33,6 +52,22 @@ function disableAdminMode(e) {
   sessionStorage.removeItem("adminMode");
   sessionStorage.removeItem("auth");
   loginCta.innerText = "Login";
+}
+
+// Displaying a list of works
+function displayWorks(list) {
+  // We flush the gallery from its content
+  galleryElement.innerHTML = "";
+  // We loop through the works and using an html template
+  for (let i = 0; i < list.length; i++) {
+    galleryElement.innerHTML += `<figure>
+    <img
+    src="${list[i].imageUrl}"
+    alt="${list[i].title}"
+    />
+    <figcaption>${list[i].title}</figcaption>
+    </figure>`;
+  }
 }
 
 // Build and display filters
@@ -77,20 +112,4 @@ function filtering(button, id) {
     document.querySelector(".active").classList.remove("active");
     button.classList.add("active");
   });
-}
-
-// Displaying a list of works
-function displayWorks(list) {
-  // We flush the gallery from its content
-  galleryElement.innerHTML = "";
-  // We loop through the works and using an html template
-  for (let i = 0; i < list.length; i++) {
-    galleryElement.innerHTML += `<figure>
-    <img
-    src="${list[i].imageUrl}"
-    alt="${list[i].title}"
-    />
-    <figcaption>${list[i].title}</figcaption>
-    </figure>`;
-  }
 }
