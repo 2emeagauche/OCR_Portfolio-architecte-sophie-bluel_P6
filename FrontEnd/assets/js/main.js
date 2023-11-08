@@ -1,17 +1,30 @@
-const allWorks = [];
-let categoriesIdList = [];
-let categories = [];
+import {getAllWorks, getAllCategories} from "./api-requests.js";
+
+// Get all the works from the server
+const allWorks = await getAllWorks();
+// Get all the categories from the server
+const allCategories = await getAllCategories();
+
 let adminMode = sessionStorage.getItem("adminMode") ?? false;
 let token = sessionStorage.getItem("auth") ?? "";
 const bodyElem = document.querySelector("body");
 const loginCta = document.getElementById("login-cta");
 
+// Display all works
+displayWorks(allWorks);
+// Build and display filters
+buildAndDisplayFilters(allCategories);
+
+// Display admin mode on Home Page
 if(adminMode) {
   bodyElem.classList.add("admin-mode");
+  // Change Login link in header to Logout
   loginCta.innerText = "Logout";
+  // Apply reset routine to logout
   loginCta.addEventListener("click", (e) => disableAdminMode(e), {once: true});
 }
 
+// On logout we remove admin mode specific styles and session infos
 function disableAdminMode(e) {
   e.preventDefault();
   bodyElem.classList.remove("admin-mode");
@@ -20,48 +33,34 @@ function disableAdminMode(e) {
   sessionStorage.removeItem("adminMode");
   sessionStorage.removeItem("auth");
   loginCta.innerText = "Login";
-  // loginCta.removeEventListener("click", (e) => disableAdminMode(e));
 }
-
-// Get all the works from the server
-fetch(apiLocalPath + "/works").then(response => response.json()).then(data => {
-  if (data.length) {
-    for (let i = 0; i < data.length; i++) {
-      allWorks.push(data[i]);
-    }
-    displayWorks(allWorks);
-    // Using Set object to store unique categories id ( => https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Set#d%C3%A9doublonner_un_tableau )
-    categoriesIdList = [...new Set(allWorks.map(obj => obj.categoryId))];
-    // Store categories pairs {id, name}
-    for (let i = 1; i <= categoriesIdList.length; i++) {
-      let catIdAndName = allWorks.find((obj) => obj.categoryId === i).category;
-      categories.push(catIdAndName);
-    }
-    // Build and display filters
-    buildAndDisplayFilters(categories);
-  }
-});
 
 // Build and display filters
 function buildAndDisplayFilters(cat) {
   let filtersElement = document.createElement("div");
+
   // Create button "All" in any case to display all works
   let buttonAllCatElement = document.createElement("button");
   let portfolioTitle = portfolioElement.querySelector(".portfolio-title-block");
-
   filtersElement.classList.add("filtres");
   buttonAllCatElement.classList.add("button","active");
   buttonAllCatElement.innerText = "Tous";
-  filtering(buttonAllCatElement);
   filtersElement.appendChild(buttonAllCatElement);
+
+  // Display all works
+  filtering(buttonAllCatElement);
+  
   // Based on the categories return by the API we create a button for each one
   for (let i = 0; i < cat.length; i++) {
     let button = document.createElement("button");
     button.classList.add("button");
     button.innerText = cat[i].name;
-    filtering(button, cat[i].id);
     filtersElement.appendChild(button);
+   
+    // Display specific works based on their category
+    filtering(button, cat[i].id);
   }
+  
   portfolioTitle.after(filtersElement);
 }
 
