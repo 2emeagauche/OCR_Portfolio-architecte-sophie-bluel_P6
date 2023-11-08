@@ -41,6 +41,29 @@ if(adminMode) {
   loginCta.innerText = "Logout";
   // Apply reset routine to logout
   loginCta.addEventListener("click", (e) => disableAdminMode(e), {once: true});
+
+  // Building the modal step 1
+  const adminModal = document.getElementById("admin-modal");
+  const protectFromCloseEvent = document.querySelector(".protect-from-close-event");
+  const buttonEdit = document.querySelector(".edit-gallery");
+  const buttonCloseModal = document.querySelector(".close-modal");
+
+  adminModal.showModal();
+  buttonEdit.addEventListener("click", () => {
+    adminModal.showModal();
+  });
+
+  buttonCloseModal.addEventListener("click", () => {
+    adminModal.close();
+  });
+
+  adminModal.addEventListener("click", () => {
+    adminModal.close();
+  });
+
+  protectFromCloseEvent.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
 }
 
 // On logout we remove admin mode specific styles and session infos
