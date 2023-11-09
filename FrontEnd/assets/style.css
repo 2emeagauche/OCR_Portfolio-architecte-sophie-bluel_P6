@@ -49,6 +49,9 @@ table {
 * {
 	box-sizing: border-box;
 }
+* {
+	box-sizing: border-box;
+}
 /** end reset css**/
 body {
 	max-width: 1140px;
