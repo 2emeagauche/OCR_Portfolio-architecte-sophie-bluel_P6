@@ -54,19 +54,7 @@ if(adminMode) {
   });
 
   // Populate the modal with photos to delete
-  feedModalWithPhotosTobeDeleted(adminModalContent);
-  /* --------- TEST ------------*/
-  // const testbtn = document.querySelector(".testbtn");
-  // testbtn.addEventListener("click", async (e) => {
-  //   e.preventDefault();
-  //   await fetch(apiLocalPath + "/works/33", {
-  //     method: "DELETE",
-  //     headers: {
-  //       "Authorization": "Bearer " + token
-  //     }
-  //   });
-  // });
-  /* --------FIN TEST ----------*/
+  feedModalWithPhotos(adminModalContent);
 
   // Closing the modal when the X symbol is clicked
   const buttonCloseModal = document.querySelector(".close-modal");
@@ -85,7 +73,7 @@ if(adminMode) {
 }
 
 // Populate the modal with photos to delete / declaration
-function feedModalWithPhotosTobeDeleted(contentZone) {
+function feedModalWithPhotos(contentZone) {
   let htmlTemplate = `<button class="close-modal"></button>
                       <h2>Galerie photo</h2>
                       <div class="gallery">`;
@@ -108,11 +96,15 @@ function feedModalWithPhotosTobeDeleted(contentZone) {
   const trashButtons = document.querySelectorAll(".remove-work");
   for (let i = 0; i < trashButtons.length; i++) {
     trashButtons[i].addEventListener("click", async (e) => {
-      e.preventDefault();
-      await deleteWork(e.target.dataset.id, token).then(response => {
-        console.log(response.statusText);
+      const id = e.target.dataset.id;
+      await deleteWork(id, token).then((response) => {
+        if(response.ok) {
+          e.target.parentNode.remove();
+          galleryElement.querySelector(`[data-id="${id}"]`).remove();
+          allWorks = getAllWorks();
+        }
       });
-    });
+    }, {once: true});
   }
 }
 
@@ -133,7 +125,7 @@ function displayWorks(list) {
   galleryElement.innerHTML = "";
   // We loop through the works and using an html template
   for (let i = 0; i < list.length; i++) {
-    galleryElement.innerHTML += `<figure>
+    galleryElement.innerHTML += `<figure data-id="${list[i].id}">
     <img
     src="${list[i].imageUrl}"
     alt="${list[i].title}"
