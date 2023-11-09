@@ -230,20 +230,23 @@ li:hover {
 #contact h2{
 	margin-bottom: 20px;
 }
-#contact form, #login-section form {
+#contact form, #login-section form, #admin-modal form {
 	text-align: left;
 	margin-top:30px;
 	display: flex;
 	flex-direction: column;
 }
 
-#contact input, #login-section input{
+#contact input, #login-section input, #admin-modal input, #admin-modal select{
 	height: 50px;
 	font-size: 1.2em;
 	border: none;
 	box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.09);
 }
-#contact label, #login-section label {
+#admin-modal select {
+	background-color: #ffffff;
+}
+#contact label, #login-section label, #admin-modal label {
 	margin: 2em 0 1em 0;
 }
 #contact textarea {
@@ -306,13 +309,26 @@ footer nav ul {
 .close-modal {
 	border:0;
 	background: none;
-	width: 20px;
-	height: 20px;
+	width: 22px;
+	height: 22px;
 	background-image: url('./icons/modal-close-button.png');
 	background-repeat: no-repeat;
 	background-position: center center;
 	position: absolute;
 	right: 32px;
+	top: 28px;
+	cursor: pointer;
+}
+.debut-modal {
+	border:0;
+	background: none;
+	width: 22px;
+	height: 22px;
+	background-image: url('./icons/arrow-left.png');
+	background-repeat: no-repeat;
+	background-position: center center;
+	position: absolute;
+	left: 32px;
 	top: 28px;
 	cursor: pointer;
 }
@@ -331,6 +347,9 @@ footer nav ul {
 	overflow-y: auto;
 	margin-bottom: 67px;
 }
+#admin-modal select {
+	margin-bottom: 47px;
+}
 #admin-modal hr {
 	width: 100%;
 	height: 1px;
@@ -338,7 +357,7 @@ footer nav ul {
 	border: 0;
 	margin: 0;
 }
-.add-work {
+.modal-submit {
 	display: block;
 	font-family: 'Syne';
 	font-weight: 700;
@@ -370,4 +389,64 @@ footer nav ul {
 	background-image: url('./icons/trash-can.svg');
 	background-position: center center;
 	background-repeat: no-repeat;
+	cursor: pointer;
+}
+#admin-modal input[type="submit"] {
+	height: auto;
+}
+.file-box {
+	position: relative;
+	border-radius: 3px;
+	background: #E8F1F6; 
+}
+.file-select-box > label {
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+	font-family: 'Work Sans';
+	padding: 20px;
+}
+#admin-modal .file-select-box > label {
+	margin: 0;
+}
+.file-select-box > label::before {
+	content: '';
+	display: block;
+	height: 76px;
+	width: 76px;
+	background-image: url('./icons/file-input-img-symbol.png');
+	background-repeat: no-repeat;
+}
+.file-label-cta {
+	display: block;
+	font-weight: 500;
+	font-size: 14px;
+	color: #306685;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 50px;
+	background: #CBD6DC; 
+	width: 173px;
+	height: 36px; 
+	margin-top: 16px;
+	margin-bottom: 7px;
+}
+.file-label-limits {
+	display: block;
+	color: #444444;
+	font-size: 10px;
+	font-weight: 400;
+}
+.file-select-box input[type=file] {
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(1px, 1px, 1px, 1px);
+	position: absolute !important;
+	opacity: 0;
+}
+#admin-modal input[type=submit][disabled] {
+	background-color: #a7a7a7;
+	cursor:default;
 }
