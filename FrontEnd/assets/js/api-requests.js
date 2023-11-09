@@ -18,6 +18,16 @@ async function authentication(emailVal, passwordVal) {
     }
   })
   .then(response => response.json());
+}
+
+async function deleteWork(id, token) {
+  return fetch(apiLocalPath + "/works/" + id, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    }
+  });
  }
 
-export {getAllWorks, getAllCategories, authentication};
+export {getAllWorks, getAllCategories, authentication, deleteWork};

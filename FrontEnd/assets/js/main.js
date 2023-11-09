@@ -1,27 +1,27 @@
-import {getAllWorks, getAllCategories} from "./api-requests.js";
+import {getAllWorks, getAllCategories, deleteWork} from "./api-requests.js";
 
 // Get all the works from localStorage or server
 let allWorks = [];
-if (localStorage.getItem("allWorks")) {
-  allWorks = JSON.parse(localStorage.getItem("allWorks"));
-} else {
-  updateWorksList();
-}
+// if (localStorage.getItem("allWorks")) {
+//   allWorks = JSON.parse(localStorage.getItem("allWorks"));
+// } else {
+//   updateWorksList();
+// }
 
 // Used at first use or after admin modifications
-async function updateWorksList() {
+// async function updateWorksList() {
   allWorks = await getAllWorks();
-  localStorage.setItem("allWorks", JSON.stringify(allWorks));
-}
+//   localStorage.setItem("allWorks", JSON.stringify(allWorks));
+// }
 
 // Get all the categories from localStorage or server
 let allCategories = [];
-if (localStorage.getItem("allCategories")) {
-  allCategories = JSON.parse(localStorage.getItem("allCategories"));
-} else {
+// if (localStorage.getItem("allCategories")) {
+//   allCategories = JSON.parse(localStorage.getItem("allCategories"));
+// } else {
   allCategories = await getAllCategories();
-  localStorage.setItem("allCategories", JSON.stringify(allCategories));
-}
+//   localStorage.setItem("allCategories", JSON.stringify(allCategories));
+// }
 
 // Display all works
 displayWorks(allWorks);
@@ -42,28 +42,78 @@ if(adminMode) {
   // Apply reset routine to logout
   loginCta.addEventListener("click", (e) => disableAdminMode(e), {once: true});
 
+  
   // Building the modal step 1
   const adminModal = document.getElementById("admin-modal");
-  const protectFromCloseEvent = document.querySelector(".protect-from-close-event");
+  const adminModalContent = document.querySelector(".protect-from-close-event");
   const buttonEdit = document.querySelector(".edit-gallery");
-  const buttonCloseModal = document.querySelector(".close-modal");
 
-  adminModal.showModal();
+  // Opening the modal when "modifier" is clicked
   buttonEdit.addEventListener("click", () => {
     adminModal.showModal();
   });
 
+  // Populate the modal with photos to delete
+  feedModalWithPhotosTobeDeleted(adminModalContent);
+  /* --------- TEST ------------*/
+  // const testbtn = document.querySelector(".testbtn");
+  // testbtn.addEventListener("click", async (e) => {
+  //   e.preventDefault();
+  //   await fetch(apiLocalPath + "/works/33", {
+  //     method: "DELETE",
+  //     headers: {
+  //       "Authorization": "Bearer " + token
+  //     }
+  //   });
+  // });
+  /* --------FIN TEST ----------*/
+
+  // Closing the modal when the X symbol is clicked
+  const buttonCloseModal = document.querySelector(".close-modal");
   buttonCloseModal.addEventListener("click", () => {
     adminModal.close();
   });
 
+  // Allow click on outside the modal to close it
   adminModal.addEventListener("click", () => {
     adminModal.close();
   });
-
-  protectFromCloseEvent.addEventListener("click", (e) => {
+  adminModalContent.addEventListener("click", (e) => {
     e.stopPropagation();
   });
+
+}
+
+// Populate the modal with photos to delete / declaration
+function feedModalWithPhotosTobeDeleted(contentZone) {
+  let htmlTemplate = `<button class="close-modal"></button>
+                      <h2>Galerie photo</h2>
+                      <div class="gallery">`;
+  
+  // We loop through the works
+  for (let i = 0; i < allWorks.length; i++) {
+    htmlTemplate += `<figure>
+    <img
+    src="${allWorks[i].imageUrl}"
+    alt="${allWorks[i].title}"
+    />
+    <button class="remove-work" data-id="${allWorks[i].id}"></button>
+    </figure>`;
+  }
+  htmlTemplate +=  `</div>
+  <hr />
+  <button class="modal-submit">Ajouter une photo</button>`;
+  contentZone.innerHTML = htmlTemplate;
+  
+  const trashButtons = document.querySelectorAll(".remove-work");
+  for (let i = 0; i < trashButtons.length; i++) {
+    trashButtons[i].addEventListener("click", async (e) => {
+      e.preventDefault();
+      await deleteWork(e.target.dataset.id, token).then(response => {
+        console.log(response.statusText);
+      });
+    });
+  }
 }
 
 // On logout we remove admin mode specific styles and session infos
