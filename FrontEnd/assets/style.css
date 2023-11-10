@@ -360,7 +360,7 @@ footer nav ul {
 	border: 0;
 	margin: 0;
 }
-.modal-submit {
+.add-work {
 	display: block;
 	font-family: 'Syne';
 	font-weight: 700;
@@ -396,6 +396,9 @@ footer nav ul {
 }
 #admin-modal input[type="submit"] {
 	height: auto;
+	padding: 0.6rem;
+	font-size: 14px;
+	cursor: pointer;
 }
 .file-box {
 	position: relative;

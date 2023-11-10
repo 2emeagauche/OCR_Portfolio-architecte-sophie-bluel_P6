@@ -1,4 +1,4 @@
-import {getAllWorks, getAllCategories, deleteWork} from "./api-requests.js";
+import {getAllWorks, getAllCategories, deleteWork, addWork} from "./api-requests.js";
 
 // Get all the works from localStorage or server
 let allWorks = [];
@@ -50,11 +50,11 @@ if(adminMode) {
 
   // Opening the modal when "modifier" is clicked
   buttonEdit.addEventListener("click", () => {
+    // Populate the modal with photos to delete
+    feedModalWithPhotos(adminModalContent);
     adminModal.showModal();
   });
 
-  // Populate the modal with photos to delete
-  feedModalWithPhotos(adminModalContent);
 
   // Closing the modal when the X symbol is clicked
   const buttonCloseModal = document.querySelector(".close-modal");
@@ -78,7 +78,7 @@ function feedModalWithPhotos(contentZone) {
                       <h2>Galerie photo</h2>
                       <div class="gallery">`;
   
-  // We loop through the works
+  // We loop through the works to display each images in the modal
   for (let i = 0; i < allWorks.length; i++) {
     htmlTemplate += `<figure>
     <img
@@ -90,14 +90,16 @@ function feedModalWithPhotos(contentZone) {
   }
   htmlTemplate +=  `</div>
   <hr />
-  <button class="modal-submit">Ajouter une photo</button>`;
+  <button class="add-work">Ajouter une photo</button>`;
   contentZone.innerHTML = htmlTemplate;
   
+  // we attach the delete request to each trash button
   const trashButtons = document.querySelectorAll(".remove-work");
   for (let i = 0; i < trashButtons.length; i++) {
     trashButtons[i].addEventListener("click", async (e) => {
       const id = e.target.dataset.id;
       await deleteWork(id, token).then((response) => {
+        // When the API confirms the deletion we remove the image from the popin and from the home page and we refresh the array allWorks
         if(response.ok) {
           e.target.parentNode.remove();
           galleryElement.querySelector(`[data-id="${id}"]`).remove();
@@ -106,6 +108,140 @@ function feedModalWithPhotos(contentZone) {
       });
     }, {once: true});
   }
+
+  // Modify the modal when click on "Ajouter"
+  const addWorkButton = document.querySelector(".add-work");
+  addWorkButton.addEventListener("click", () => {
+    feedModalWithAddForm(contentZone);
+  });
+}
+
+// Populate the modal with add photo form
+function feedModalWithAddForm(contentZone) {
+  let htmlTemplate = `<button class="close-modal"></button>
+                      <button class="debut-modal"></button>
+                      <h2>Ajout photo</h2>
+                      <form action="#" id="add-work-form">
+                        <div class="file-box">
+                          <div class="file-select-box">
+                            <label for="img"
+                              ><span class="file-label-cta">+ Ajouter photo</span>
+                              <span class="file-label-limits"
+                                >jpg, png : 4mo max</span
+                              ></label
+                            >
+                            <input
+                              type="file"
+                              accept=".png, .jpeg, .jpg"
+                              name="img"
+                              id="img"
+                            />
+                          </div>
+                          <div class="file-preview"></div>
+                        </div>
+                        <label for="titre">Titre</label>
+                        <input type="text" name="titre" id="titre" />
+                        <label for="category">Catégorie</label>
+                        <select name="category" id="category">
+                          <option value=""></option>`;
+                          for (let i = 0; i < allCategories.length; i++) {
+                            htmlTemplate += `<option value="${allCategories[i].id}">${allCategories[i].name}</option>`;
+                          }
+                          htmlTemplate += `</select>
+                        <hr />
+                        <input
+                          class="modal-submit"
+                          type="submit"
+                          value="valider"
+                          disabled
+                        />
+                      </form>`;
+  contentZone.innerHTML = htmlTemplate;
+    
+  // Go back to deleting step when click on left arrow
+  document.querySelector(".debut-modal").addEventListener("click", () => {
+    feedModalWithPhotos(contentZone);
+  }, {once:true});
+    
+  checkForm(document.getElementById("add-work-form"));
+  // contentZone.querySelector(".modal-submit").removeAttribute("disabled");
+  document.getElementById("add-work-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    validateAddForm(e);
+  });
+  
+}
+
+let imgUploadedType = "";
+let imgUploadedSize = "";
+
+function checkForm(theform) {
+  let valid = true;
+  const fileElt = theform.querySelector("#img");
+  const titleElt = theform.querySelector("#titre");
+  const categoryElt = theform.querySelector("#category");
+  const submitElt = theform.querySelector(".modal-submit");
+  fileElt.addEventListener("change", (e) => {
+    if(checkImage(fileElt)) {
+      previewImage(fileElt.files[0]);
+      enableSubmit(fileElt.value, titleElt.value, categoryElt.value, submitElt);
+    }
+  });
+  titleElt.addEventListener("change", (e) => {
+    enableSubmit(fileElt.value, titleElt.value, categoryElt.value, submitElt);
+  });
+  categoryElt.addEventListener("change", (e) => {
+    enableSubmit(fileElt.value, titleElt.value, categoryElt.value, submitElt);
+  });
+}
+
+function checkImage(fileElt) {
+  // Calcul de la taille totale
+  let numberOfBytes = 0;
+  const file = fileElt.files[0];
+  imgUploadedType = file.type;
+  numberOfBytes = file.size;
+
+  // Approximation à l'unité humaine la plus proche
+  const units = ["o", "Ko", "Mo", "Go", "To", "Po", "Eo", "Zo", "Yo"];
+  const exponent = Math.min(
+    Math.floor(Math.log(numberOfBytes) / Math.log(1024)),
+    units.length - 1,
+  );
+  const approx = numberOfBytes / 1024 ** exponent;
+  imgUploadedSize = exponent === 0
+                  ? `${numberOfBytes} octets`
+                  : `${approx.toFixed(3)} ${units[exponent]}`;
+                
+  if(exponent > 2) return false;
+  else if(/jpeg|png/.test(imgUploadedType) === false) return false;
+  else if((exponent === 2 && approx.toFixed(3) < 4) || exponent < 2) return true;
+  else return false;
+
+}
+
+function previewImage(file) {
+    const img = document.createElement("img");
+    img.classList.add("obj");
+    img.file = file;
+    document.querySelector(".file-preview").innerHTML = "";
+    document.querySelector(".file-preview").appendChild(img); // Où  "preview" correspond à l'élément div où on affiche le contenu.
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function enableSubmit(a,b,c,d) {
+  if(!!a && !!b && !!c) d.removeAttribute("disabled");
+  else d.setAttribute("disabled","");
+}
+
+async function validateAddForm(e) {
+  // await addWork(image, title, category, token);
+  console.log(e.target);
 }
 
 // On logout we remove admin mode specific styles and session infos

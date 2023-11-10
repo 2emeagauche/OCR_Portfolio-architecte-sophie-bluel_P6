@@ -28,6 +28,22 @@ async function deleteWork(id, token) {
       "Authorization": "Bearer " + token
     }
   });
- }
+}
 
-export {getAllWorks, getAllCategories, authentication, deleteWork};
+async function addWork(image, title, category, token) {
+  return fetch(apiLocalPath + "/works", {
+    method: "POST",
+    headers: {
+      "Content-Type": "multipart/form-data",
+      "Authorization": "Bearer " + token
+    },
+    body: `{
+      "image": "${image}",
+      "title": "${title}",
+      "category": "${category}"
+    }`
+  })
+  .then(response => response.json());
+}
+
+export {getAllWorks, getAllCategories, authentication, deleteWork, addWork};
