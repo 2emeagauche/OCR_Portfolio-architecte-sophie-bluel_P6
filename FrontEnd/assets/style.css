@@ -404,6 +404,12 @@ footer nav ul {
 	position: relative;
 	border-radius: 3px;
 	background: #E8F1F6; 
+	height: 190px;
+}
+.file-box__preview .file-select-box {
+	opacity: 0;
+	position: relative;
+	z-index: 2;
 }
 .file-select-box > label {
 	display: flex;
@@ -411,6 +417,7 @@ footer nav ul {
 	flex-direction: column;
 	font-family: 'Work Sans';
 	padding: 20px;
+	cursor: pointer;
 }
 #admin-modal .file-select-box > label {
 	margin: 0;
@@ -455,4 +462,20 @@ footer nav ul {
 #admin-modal input[type=submit][disabled] {
 	background-color: #a7a7a7;
 	cursor:default;
+}
+.file-preview {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 1;
+	margin: auto;
+}
+.file-box__preview .file-preview {
+	bottom: 0;
+}
+.file-preview img {
+	display: block;
+	height: 100%;
+	margin: auto;
 }

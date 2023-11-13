@@ -99,8 +99,8 @@ function feedModalWithPhotos(contentZone) {
     trashButtons[i].addEventListener("click", async (e) => {
       const id = e.target.dataset.id;
       await deleteWork(id, token).then((response) => {
-        // When the API confirms the deletion we remove the image from the popin and from the home page and we refresh the array allWorks
-        if(response.ok) {
+         // When the API confirms the deletion we remove the image from the popin and from the home page and we refresh the array allWorks
+        if(/^2\d{2}$/.test(response.status)) {
           e.target.parentNode.remove();
           galleryElement.querySelector(`[data-id="${id}"]`).remove();
           allWorks = getAllWorks();
@@ -181,10 +181,19 @@ function checkForm(theform) {
   const titleElt = theform.querySelector("#titre");
   const categoryElt = theform.querySelector("#category");
   const submitElt = theform.querySelector(".modal-submit");
+  const specsText = theform.querySelector(".file-label-limits");
+  const filePreview = theform.querySelector(".file-preview");
   fileElt.addEventListener("change", (e) => {
+    if(filePreview.hasChildNodes()) {
+      filePreview.childNodes[0].remove();
+      theform.querySelector(".file-box").classList.remove("file-box__preview");
+    }
+    if(theform.querySelector(".img-error-msg") !== null) theform.querySelector(".img-error-msg").remove();
     if(checkImage(fileElt)) {
       previewImage(fileElt.files[0]);
       enableSubmit(fileElt.value, titleElt.value, categoryElt.value, submitElt);
+    } else {
+      displayImgErrorMsg(specsText);
     }
   });
   titleElt.addEventListener("change", (e) => {
@@ -213,19 +222,25 @@ function checkImage(fileElt) {
                   ? `${numberOfBytes} octets`
                   : `${approx.toFixed(3)} ${units[exponent]}`;
                 
-  if(exponent > 2) return false;
-  else if(/jpeg|png/.test(imgUploadedType) === false) return false;
-  else if((exponent === 2 && approx.toFixed(3) < 4) || exponent < 2) return true;
-  else return false;
+  return ((exponent === 2 && approx.toFixed(3) < 4) || exponent < 2) && /jpeg|png/.test(imgUploadedType);
 
+}
+
+function displayImgErrorMsg(spectext) {
+  const imgErrorMsg = document.createElement("span");
+  imgErrorMsg.classList.add("img-error-msg");
+  imgErrorMsg.innerText = "L'image choisie est trop lourde ou elle n'est pas un png ou un jpeg";
+  spectext.after(imgErrorMsg);
 }
 
 function previewImage(file) {
     const img = document.createElement("img");
+    const filePreview = document.querySelector(".file-preview");
     img.classList.add("obj");
     img.file = file;
-    document.querySelector(".file-preview").innerHTML = "";
-    document.querySelector(".file-preview").appendChild(img); // Où  "preview" correspond à l'élément div où on affiche le contenu.
+    filePreview.innerHTML = "";
+    document.querySelector(".file-box").classList.add("file-box__preview");
+    filePreview.appendChild(img); // Où  "preview" correspond à l'élément div où on affiche le contenu.
 
     const reader = new FileReader();
     reader.onload = (e) => {

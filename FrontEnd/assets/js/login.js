@@ -14,7 +14,8 @@ loginForm.addEventListener("submit", async (e) => {
   let emailVal = emailField.value.trim();
   let passwordVal = passwordField.value.trim();
   const loginResponse = await authentication(emailVal, passwordVal);
-  if (loginResponse.message === "user not found") {
+  console.log("réponse",loginResponse);
+  if (loginResponse === "echec") {
     displayError();
   } else {
     enableAdminMode(loginResponse);

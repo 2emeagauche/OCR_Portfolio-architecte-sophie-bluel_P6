@@ -17,7 +17,14 @@ async function authentication(emailVal, passwordVal) {
       "Content-Type": "application/json"
     }
   })
-  .then(response => response.json());
+  .then((response) => {
+    if(response.ok){
+      return response.json();
+    } else {
+      throw new Error('echec');
+    }
+  })
+  .catch(error => error.message);
 }
 
 async function deleteWork(id, token) {
