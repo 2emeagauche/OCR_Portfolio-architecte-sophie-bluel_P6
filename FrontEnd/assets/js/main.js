@@ -229,7 +229,7 @@ function checkImage(fileElt) {
 function displayImgErrorMsg(spectext) {
   const imgErrorMsg = document.createElement("span");
   imgErrorMsg.classList.add("img-error-msg");
-  imgErrorMsg.innerText = "L'image choisie est trop lourde ou elle n'est pas un png ou un jpeg";
+  imgErrorMsg.innerText = "L'image excède 4Mo ou elle n'est pas un jpg ou un png";
   spectext.after(imgErrorMsg);
 }
 

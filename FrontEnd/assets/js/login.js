@@ -13,13 +13,15 @@ loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   let emailVal = emailField.value.trim();
   let passwordVal = passwordField.value.trim();
-  const loginResponse = await authentication(emailVal, passwordVal);
-  console.log("réponse",loginResponse);
-  if (loginResponse === "echec") {
-    displayError();
-  } else {
-    enableAdminMode(loginResponse);
-  }
+  const loginResponse = await authentication(emailVal, passwordVal)
+  .then((response) => {
+    if(/^2\d{2}$/.test(response.status)) {
+      enableAdminMode(response.json());
+    } else {
+      displayError(response.status);
+    }
+  })
+  .catch(() => displayError(NaN));
 });
 
 function enableAdminMode(loginResponse) {
@@ -28,11 +30,16 @@ function enableAdminMode(loginResponse) {
   window.location = "./index.html";
 }
 
-function displayError() {
+function displayError(errorcode) {
   const errorMessage = document.createElement("p");
-  loginForm.classList.add("error");
-  errorMessage.innerText = "Erreur dans l’identifiant ou le mot de passe";
-  loginForm.appendChild(errorMessage);
+  errorMessage.classList.add("error");
+  if(errorcode === 401) {
+    loginForm.classList.add("error");
+    errorMessage.innerText = "Erreur dans l’identifiant ou le mot de passe";
+  } else {
+    errorMessage.innerText = "Echec de la connexion. Veuillez réessayer plus tard.";
+  }
+  passwordField.after(errorMessage);
 }
 
 function removeError() {
