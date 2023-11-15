@@ -98,14 +98,18 @@ function feedModalWithPhotos(contentZone) {
   for (let i = 0; i < trashButtons.length; i++) {
     trashButtons[i].addEventListener("click", async (e) => {
       const id = e.target.dataset.id;
-      await deleteWork(id, token).then((response) => {
-         // When the API confirms the deletion we remove the image from the popin and from the home page and we refresh the array allWorks
-        if(/^2\d{2}$/.test(response.status)) {
-          e.target.parentNode.remove();
-          galleryElement.querySelector(`[data-id="${id}"]`).remove();
-          allWorks = getAllWorks();
-        }
-      });
+      if(isTokenGood()) {
+        await deleteWork(id, token).then((response) => {
+          // When the API confirms the deletion we remove the image from the popin and from the home page and we refresh the array allWorks
+          if(/^2\d{2}$/.test(response.status)) {
+            e.target.parentNode.remove();
+            galleryElement.querySelector(`[data-id="${id}"]`).remove();
+            allWorks = getAllWorks();
+          }
+        });
+      } else {
+        alert("La connexion a expiré");
+      }
     }, {once: true});
   }
 
@@ -115,6 +119,19 @@ function feedModalWithPhotos(contentZone) {
     feedModalWithAddForm(contentZone);
   });
 }
+
+function isTokenGood() {
+  const date = new Date();
+  const now = date.getTime();
+  // const twentyfourhours = 24 * 60 * 60 * 1000;
+  const twentyfourhours = 100000;
+  if(token) {
+    return (twentyfourhours - (now - sessionStorage.getItem("dob"))) > 0 ? true : false;
+  } else {
+    return false;
+  }
+}
+
 
 // Populate the modal with add photo form
 function feedModalWithAddForm(contentZone) {
@@ -267,6 +284,7 @@ function disableAdminMode(e) {
   token = "";
   sessionStorage.removeItem("adminMode");
   sessionStorage.removeItem("auth");
+  sessionStorage.removeItem("dob");
   loginCta.innerText = "Login";
 }
 

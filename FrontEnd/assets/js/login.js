@@ -35,6 +35,7 @@ function enableAdminMode(loginResponse) {
   console.log(loginResponse);
   sessionStorage.setItem("adminMode", "true");
   sessionStorage.setItem("auth", loginResponse.token);
+  sessionStorage.setItem("dob", loginResponse.dob);
   window.location = "./index.html";
 }
 
