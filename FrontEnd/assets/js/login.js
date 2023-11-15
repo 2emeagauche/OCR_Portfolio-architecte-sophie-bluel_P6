@@ -13,29 +13,42 @@ loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   let emailVal = emailField.value.trim();
   let passwordVal = passwordField.value.trim();
+  let loginstatus = NaN;
   const loginResponse = await authentication(emailVal, passwordVal)
+  // .then((response) => response.json());
+  // enableAdminMode(loginResponse);
   .then((response) => {
-    if(/^2\d{2}$/.test(response.status)) {
-      enableAdminMode(response.json());
-    } else {
-      displayError(response.status);
-    }
+    loginstatus = response.status;
+    return response.json();
   })
-  .catch(() => displayError(NaN));
+  .catch((e) => {
+    loginstatus = NaN;
+  });
+  if(/^2\d{2}$/.test(loginstatus)) {
+    enableAdminMode(loginResponse);
+  } else {
+    displayError(loginstatus);
+  }
 });
 
 function enableAdminMode(loginResponse) {
+  console.log(loginResponse);
   sessionStorage.setItem("adminMode", "true");
   sessionStorage.setItem("auth", loginResponse.token);
   window.location = "./index.html";
 }
 
 function displayError(errorcode) {
+  removeError();
   const errorMessage = document.createElement("p");
   errorMessage.classList.add("error");
+  console.log(errorcode);
   if(errorcode === 401) {
     loginForm.classList.add("error");
-    errorMessage.innerText = "Erreur dans l’identifiant ou le mot de passe";
+    errorMessage.innerText = "Erreur dans le mot de passe";
+  } else if(errorcode === 404) {
+    loginForm.classList.add("error");
+    errorMessage.innerText = "Utilisateur introuvable";
   } else {
     errorMessage.innerText = "Echec de la connexion. Veuillez réessayer plus tard.";
   }

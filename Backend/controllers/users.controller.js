@@ -31,6 +31,7 @@ exports.login = async (req, res) => {
 		return res.status(404).json({message: 'user not found'})
 	}else {
 		const valid = await bcrypt.compare(req.body.password, user.password)
+		const now = new Date()
 		if(!valid){
 			return res.status(401).json({ error: new Error('Not Authorized') })
 		}
@@ -40,7 +41,8 @@ exports.login = async (req, res) => {
 				{userId : user.id},
 				process.env.TOKEN_SECRET,
 				{ expiresIn: '24h' }
-			)
+			),
+			dob: now.getTime()
 		})
 
 	}
