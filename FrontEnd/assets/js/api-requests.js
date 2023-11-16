@@ -30,19 +30,17 @@ async function deleteWork(id, token) {
 }
 
 async function addWork(image, title, category, token) {
+  const formData = new FormData();
+  formData.append("image", image);
+  formData.append("title", title);
+  formData.append("category", "" + category);
   return fetch(apiLocalPath + "/works", {
     method: "POST",
     headers: {
-      "Content-Type": "multipart/form-data",
       "Authorization": "Bearer " + token
     },
-    body: `{
-      "image": "${image}",
-      "title": "${title}",
-      "category": "${category}"
-    }`
-  })
-  .then(response => response.json());
+    body: formData
+  });
 }
 
 export {getAllWorks, getAllCategories, authentication, deleteWork, addWork};

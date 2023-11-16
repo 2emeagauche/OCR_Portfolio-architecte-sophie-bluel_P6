@@ -32,7 +32,6 @@ loginForm.addEventListener("submit", async (e) => {
 });
 
 function enableAdminMode(loginResponse) {
-  console.log(loginResponse);
   sessionStorage.setItem("adminMode", "true");
   sessionStorage.setItem("auth", loginResponse.token);
   sessionStorage.setItem("dob", loginResponse.dob);
@@ -43,7 +42,6 @@ function displayError(errorcode) {
   removeError();
   const errorMessage = document.createElement("p");
   errorMessage.classList.add("error");
-  console.log(errorcode);
   if(errorcode === 401) {
     loginForm.classList.add("error");
     errorMessage.innerText = "Erreur dans le mot de passe";

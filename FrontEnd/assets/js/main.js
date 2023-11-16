@@ -2,26 +2,13 @@ import {getAllWorks, getAllCategories, deleteWork, addWork} from "./api-requests
 
 // Get all the works from localStorage or server
 let allWorks = [];
-// if (localStorage.getItem("allWorks")) {
-//   allWorks = JSON.parse(localStorage.getItem("allWorks"));
-// } else {
-//   updateWorksList();
-// }
 
 // Used at first use or after admin modifications
-// async function updateWorksList() {
-  allWorks = await getAllWorks();
-//   localStorage.setItem("allWorks", JSON.stringify(allWorks));
-// }
+allWorks = await getAllWorks();
 
 // Get all the categories from localStorage or server
 let allCategories = [];
-// if (localStorage.getItem("allCategories")) {
-//   allCategories = JSON.parse(localStorage.getItem("allCategories"));
-// } else {
-  allCategories = await getAllCategories();
-//   localStorage.setItem("allCategories", JSON.stringify(allCategories));
-// }
+allCategories = await getAllCategories();
 
 // Display all works
 displayWorks(allWorks);
@@ -34,6 +21,16 @@ let token = sessionStorage.getItem("auth") ?? "";
 const bodyElem = document.querySelector("body");
 const loginCta = document.getElementById("login-cta");
 
+const adminModal = document.getElementById("admin-modal");
+const adminModalContent = document.querySelector(".protect-from-close-event");
+const buttonEdit = document.querySelector(".edit-gallery");
+
+let imgUploadedType = "";
+// let imgUploadedSize = 0;
+let imgBin = null;
+let workTitle = "";
+let workCat = null;
+
 // Display admin mode on Home Page
 if(adminMode) {
   bodyElem.classList.add("admin-mode");
@@ -42,12 +39,6 @@ if(adminMode) {
   // Apply reset routine to logout
   loginCta.addEventListener("click", (e) => disableAdminMode(e), {once: true});
 
-  
-  // Building the modal step 1
-  const adminModal = document.getElementById("admin-modal");
-  const adminModalContent = document.querySelector(".protect-from-close-event");
-  const buttonEdit = document.querySelector(".edit-gallery");
-
   // Opening the modal when "modifier" is clicked
   buttonEdit.addEventListener("click", () => {
     // Populate the modal with photos to delete
@@ -55,21 +46,26 @@ if(adminMode) {
     adminModal.showModal();
   });
 
-
   // Closing the modal when the X symbol is clicked
   const buttonCloseModal = document.querySelector(".close-modal");
   buttonCloseModal.addEventListener("click", () => {
-    adminModal.close();
+    closingModal(adminModal);
+    // adminModal.close();
   });
-
+  
   // Allow click on outside the modal to close it
   adminModal.addEventListener("click", () => {
-    adminModal.close();
+    closingModal(adminModal);
+    // adminModal.close();
   });
   adminModalContent.addEventListener("click", (e) => {
     e.stopPropagation();
   });
 
+}
+
+function closingModal(modal) {
+  modal.close();
 }
 
 // Populate the modal with photos to delete / declaration
@@ -123,8 +119,7 @@ function feedModalWithPhotos(contentZone) {
 function isTokenGood() {
   const date = new Date();
   const now = date.getTime();
-  // const twentyfourhours = 24 * 60 * 60 * 1000;
-  const twentyfourhours = 100000;
+  const twentyfourhours = 24 * 60 * 60 * 1000;
   if(token) {
     return (twentyfourhours - (now - sessionStorage.getItem("dob"))) > 0 ? true : false;
   } else {
@@ -182,15 +177,29 @@ function feedModalWithAddForm(contentZone) {
     
   checkForm(document.getElementById("add-work-form"));
   // contentZone.querySelector(".modal-submit").removeAttribute("disabled");
-  document.getElementById("add-work-form").addEventListener("submit", (e) => {
+  document.getElementById("add-work-form").addEventListener("submit", async (e) => {
     e.preventDefault();
-    validateAddForm(e);
+    let loginstatus = NaN;
+    if(isTokenGood()) {
+      const loginResponse = await addWork(imgBin, workTitle, workCat, token)
+      .then(response => {
+        loginstatus = response.status;
+        return response.text();
+      })
+      .then(result => console.log(result))
+      .catch(error => console.log('error', error));
+      if(/^2\d{2}$/.test(loginstatus)) {
+        closingModal(adminModal);
+      } else {
+        alert("Erreur : " + loginstatus || "inconnue");
+      }
+    } else {
+      alert("La connexion a expiré");
+    }
   });
   
 }
 
-let imgUploadedType = "";
-let imgUploadedSize = "";
 
 function checkForm(theform) {
   let valid = true;
@@ -208,16 +217,16 @@ function checkForm(theform) {
     if(theform.querySelector(".img-error-msg") !== null) theform.querySelector(".img-error-msg").remove();
     if(checkImage(fileElt)) {
       previewImage(fileElt.files[0]);
-      enableSubmit(fileElt.value, titleElt.value, categoryElt.value, submitElt);
+      enableSubmit(fileElt.files[0], titleElt.value, categoryElt.value, submitElt);
     } else {
       displayImgErrorMsg(specsText);
     }
   });
   titleElt.addEventListener("change", (e) => {
-    enableSubmit(fileElt.value, titleElt.value, categoryElt.value, submitElt);
+    enableSubmit(fileElt.files[0], titleElt.value, categoryElt.value, submitElt);
   });
   categoryElt.addEventListener("change", (e) => {
-    enableSubmit(fileElt.value, titleElt.value, categoryElt.value, submitElt);
+    enableSubmit(fileElt.files[0], titleElt.value, categoryElt.value, submitElt);
   });
 }
 
@@ -235,9 +244,9 @@ function checkImage(fileElt) {
     units.length - 1,
   );
   const approx = numberOfBytes / 1024 ** exponent;
-  imgUploadedSize = exponent === 0
-                  ? `${numberOfBytes} octets`
-                  : `${approx.toFixed(3)} ${units[exponent]}`;
+  // imgUploadedSize = exponent === 0
+  //                 ? `${numberOfBytes} octets`
+  //                 : `${approx.toFixed(3)} ${units[exponent]}`;
                 
   return ((exponent === 2 && approx.toFixed(3) < 4) || exponent < 2) && /jpeg|png/.test(imgUploadedType);
 
@@ -264,16 +273,16 @@ function previewImage(file) {
       img.src = e.target.result;
     };
     reader.readAsDataURL(file);
-}
-
+  }
+  
 function enableSubmit(a,b,c,d) {
-  if(!!a && !!b && !!c) d.removeAttribute("disabled");
+  if(a && !!b && !!c) {
+    imgBin = a;
+    workTitle = b;
+    workCat = c;
+    d.removeAttribute("disabled");
+  }
   else d.setAttribute("disabled","");
-}
-
-async function validateAddForm(e) {
-  // await addWork(image, title, category, token);
-  console.log(e.target);
 }
 
 // On logout we remove admin mode specific styles and session infos
