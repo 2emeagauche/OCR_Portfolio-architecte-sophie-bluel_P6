@@ -76,13 +76,7 @@ function feedModalWithPhotos(contentZone) {
   
   // We loop through the works to display each images in the modal
   for (let i = 0; i < allWorks.length; i++) {
-    htmlTemplate += `<figure>
-    <img
-    src="${allWorks[i].imageUrl}"
-    alt="${allWorks[i].title}"
-    />
-    <button class="remove-work" data-id="${allWorks[i].id}"></button>
-    </figure>`;
+    htmlTemplate += modalTileTemplate(allWorks[i].id, allWorks[i].imageUrl, allWorks[i].title);
   }
   htmlTemplate +=  `</div>
   <hr />
@@ -94,15 +88,17 @@ function feedModalWithPhotos(contentZone) {
   for (let i = 0; i < trashButtons.length; i++) {
     trashButtons[i].addEventListener("click", async (e) => {
       const id = e.target.dataset.id;
+      let loginStatus = 0;
       if(isTokenGood()) {
         await deleteWork(id, token).then((response) => {
-          // When the API confirms the deletion we remove the image from the popin and from the home page and we refresh the array allWorks
-          if(/^2\d{2}$/.test(response.status)) {
-            e.target.parentNode.remove();
-            galleryElement.querySelector(`[data-id="${id}"]`).remove();
-            allWorks = getAllWorks();
-          }
+          loginStatus = response.status;
         });
+        // When the API confirms the deletion we remove the image from the popin and from the home page and we refresh the array allWorks
+        if(/^2\d{2}$/.test(loginStatus)) {
+          e.target.parentNode.remove();
+          galleryElement.querySelector(`[data-id="${id}"]`).remove();
+          allWorks = await getAllWorks();
+        }
       } else {
         alert("La connexion a expiré");
       }
@@ -114,6 +110,16 @@ function feedModalWithPhotos(contentZone) {
   addWorkButton.addEventListener("click", () => {
     feedModalWithAddForm(contentZone);
   });
+}
+
+function modalTileTemplate(id, url, title) {
+  return `<figure>
+            <img
+            src="${url}"
+            alt="${title}"
+            />
+            <button class="remove-work" data-id="${id}"></button>
+          </figure>`;
 }
 
 function isTokenGood() {
@@ -184,12 +190,13 @@ function feedModalWithAddForm(contentZone) {
       const loginResponse = await addWork(imgBin, workTitle, workCat, token)
       .then(response => {
         loginstatus = response.status;
-        return response.text();
+        return response.json();
       })
-      .then(result => console.log(result))
       .catch(error => console.log('error', error));
       if(/^2\d{2}$/.test(loginstatus)) {
-        closingModal(adminModal);
+        // closingModal(adminModal);
+        updatingDom(loginResponse);
+        allWorks = await getAllWorks();
       } else {
         alert("Erreur : " + loginstatus || "inconnue");
       }
@@ -200,6 +207,9 @@ function feedModalWithAddForm(contentZone) {
   
 }
 
+function updatingDom(workAdded) {
+  galleryElement.innerHTML += galleryTileTemplate(workAdded.id, workAdded.imageUrl, workAdded.title);
+}
 
 function checkForm(theform) {
   let valid = true;
@@ -303,14 +313,18 @@ function displayWorks(list) {
   galleryElement.innerHTML = "";
   // We loop through the works and using an html template
   for (let i = 0; i < list.length; i++) {
-    galleryElement.innerHTML += `<figure data-id="${list[i].id}">
-    <img
-    src="${list[i].imageUrl}"
-    alt="${list[i].title}"
-    />
-    <figcaption>${list[i].title}</figcaption>
-    </figure>`;
+    galleryElement.innerHTML += galleryTileTemplate(list[i].id, list[i].imageUrl, list[i].title);
   }
+}
+
+function galleryTileTemplate(id, url, title) {
+  return `<figure data-id="${id}">
+            <img
+            src="${url}"
+            alt="${title}"
+            />
+            <figcaption>${title}</figcaption>
+          </figure>`;
 }
 
 // Build and display filters
