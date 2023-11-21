@@ -298,15 +298,21 @@ footer nav ul {
 	border-radius: 10px;
 	background-color: #ffffff;
 }
+
 #admin-modal > div{
 	position: relative;
 	padding-top: 60px;
 	padding-bottom: 45px;
 	padding-left: 100px;
 	padding-right: 100px;
-	max-height: 700px;
+	max-height: 710px;
 	overflow: hidden;
 }
+
+#admin-modal > div.add-content{
+	max-height: none;
+}
+
 #admin-modal::backdrop {
 	background: rgba(0,0,0,0.3);
 }

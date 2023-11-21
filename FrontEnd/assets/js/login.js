@@ -32,9 +32,12 @@ loginForm.addEventListener("submit", async (e) => {
 });
 
 function enableAdminMode(loginResponse) {
+  const date = new Date();
+  const now = date.getTime();
   sessionStorage.setItem("adminMode", "true");
   sessionStorage.setItem("auth", loginResponse.token);
-  sessionStorage.setItem("dob", loginResponse.dob);
+  // sessionStorage.setItem("dob", loginResponse.dob);
+  sessionStorage.setItem("tokenCreationDate", now);
   window.location = "./index.html";
 }
 

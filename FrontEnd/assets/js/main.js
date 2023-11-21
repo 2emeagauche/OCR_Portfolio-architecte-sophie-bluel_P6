@@ -46,20 +46,19 @@ if(adminMode) {
     adminModal.showModal();
   });
 
-  // Closing the modal when the X symbol is clicked
-  const buttonCloseModal = document.querySelector(".close-modal");
-  buttonCloseModal.addEventListener("click", () => {
-    closingModal(adminModal);
-    // adminModal.close();
-  });
   
   // Allow click on outside the modal to close it
   adminModal.addEventListener("click", () => {
     closingModal(adminModal);
     // adminModal.close();
   });
+  // Prevent closing the modal anywhere in the the modal but X symbol
   adminModalContent.addEventListener("click", (e) => {
-    e.stopPropagation();
+    if(e.target.classList[0] === "close-modal") {
+      closingModal(adminModal);
+    } else {
+      e.stopPropagation();
+    }
   });
 
 }
@@ -82,6 +81,7 @@ function feedModalWithPhotos(contentZone) {
   <hr />
   <button class="add-work">Ajouter une photo</button>`;
   contentZone.innerHTML = htmlTemplate;
+  contentZone.classList.remove("add-content");
   
   // we attach the delete request to each trash button
   const trashButtons = document.querySelectorAll(".remove-work");
@@ -127,7 +127,7 @@ function isTokenGood() {
   const now = date.getTime();
   const twentyfourhours = 24 * 60 * 60 * 1000;
   if(token) {
-    return (twentyfourhours - (now - sessionStorage.getItem("dob"))) > 0 ? true : false;
+    return (twentyfourhours - (now - sessionStorage.getItem("tokenCreationDate"))) > 0 ? true : false;
   } else {
     return false;
   }
@@ -175,15 +175,16 @@ function feedModalWithAddForm(contentZone) {
                         />
                       </form>`;
   contentZone.innerHTML = htmlTemplate;
+  contentZone.classList.add("add-content");
     
   // Go back to deleting step when click on left arrow
   document.querySelector(".debut-modal").addEventListener("click", () => {
     feedModalWithPhotos(contentZone);
   }, {once:true});
     
-  checkForm(document.getElementById("add-work-form"));
-  // contentZone.querySelector(".modal-submit").removeAttribute("disabled");
-  document.getElementById("add-work-form").addEventListener("submit", async (e) => {
+  const addWorkForm = document.getElementById("add-work-form");
+  checkForm(addWorkForm);
+  addWorkForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     let loginstatus = NaN;
     if(isTokenGood()) {
@@ -194,9 +195,10 @@ function feedModalWithAddForm(contentZone) {
       })
       .catch(error => console.log('error', error));
       if(/^2\d{2}$/.test(loginstatus)) {
-        // closingModal(adminModal);
-        updatingDom(loginResponse);
+        galleryElement.innerHTML += galleryTileTemplate(loginResponse.id, loginResponse.imageUrl, loginResponse.title);
         allWorks = await getAllWorks();
+        if(window.confirm("L'élément a été ajouté avec succès. Continuer ?")) resetAddForm(addWorkForm);
+        else closingModal(adminModal);
       } else {
         alert("Erreur : " + loginstatus || "inconnue");
       }
@@ -207,12 +209,15 @@ function feedModalWithAddForm(contentZone) {
   
 }
 
-function updatingDom(workAdded) {
-  galleryElement.innerHTML += galleryTileTemplate(workAdded.id, workAdded.imageUrl, workAdded.title);
+function resetAddForm(theform) {
+  theform.querySelector(".file-preview").childNodes[0].remove();
+  theform.querySelector(".file-box").classList.remove("file-box__preview");
+  theform.querySelector(".modal-submit").setAttribute("disabled","");
+  theform.querySelector("#titre").value = "";
+  theform.querySelector("#category").value = "";
 }
 
 function checkForm(theform) {
-  let valid = true;
   const fileElt = theform.querySelector("#img");
   const titleElt = theform.querySelector("#titre");
   const categoryElt = theform.querySelector("#category");
@@ -303,7 +308,7 @@ function disableAdminMode(e) {
   token = "";
   sessionStorage.removeItem("adminMode");
   sessionStorage.removeItem("auth");
-  sessionStorage.removeItem("dob");
+  sessionStorage.removeItem("tokenCreationDate");
   loginCta.innerText = "Login";
 }
 
