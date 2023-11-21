@@ -6,38 +6,46 @@ const loginForm = document.querySelector("#login-form");
 const emailField = document.getElementById("email");
 const passwordField = document.getElementById("password");
 
+// Removing errors when focusing in fields
 emailField.addEventListener("focus", removeError);
 passwordField.addEventListener("focus", removeError);
 
+// On submitting the form we call the API
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   let emailVal = emailField.value.trim();
   let passwordVal = passwordField.value.trim();
-  let loginstatus = NaN;
-  const loginResponse = await authentication(emailVal, passwordVal)
-  // .then((response) => response.json());
-  // enableAdminMode(loginResponse);
+  let responseStatus = NaN;
+  const response = await authentication(emailVal, passwordVal)
   .then((response) => {
-    loginstatus = response.status;
+    responseStatus = response.status;
     return response.json();
   })
   .catch((e) => {
-    loginstatus = NaN;
+    responseStatus = NaN;
   });
-  if(/^2\d{2}$/.test(loginstatus)) {
-    enableAdminMode(loginResponse);
+  // If API response status is 2** then 
+  // - we store the token in session storage
+  // - we set adminMode to true
+  // - we redirect to home page
+  if(/^2\d{2}$/.test(responseStatus)) {
+    enableAdminMode(response);
+  // If not we display error message according to other response status code
   } else {
-    displayError(loginstatus);
+    displayError(responseStatus);
   }
 });
 
-function enableAdminMode(loginResponse) {
+function enableAdminMode(response) {
   const date = new Date();
   const now = date.getTime();
+  // We store the adminMode value
   sessionStorage.setItem("adminMode", "true");
-  sessionStorage.setItem("auth", loginResponse.token);
-  // sessionStorage.setItem("dob", loginResponse.dob);
+  // We store the token
+  sessionStorage.setItem("auth", response.token);
+  // We store the token creation date to further check if it is not expired
   sessionStorage.setItem("tokenCreationDate", now);
+  // We redirect to home page
   window.location = "./index.html";
 }
 

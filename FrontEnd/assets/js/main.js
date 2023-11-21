@@ -8,9 +8,9 @@ allWorks = await getAllWorks();
 let allCategories = [];
 allCategories = await getAllCategories();
 
-// Display all works
+// Display all works on Home Page
 displayWorks(allWorks);
-// Build and display filters
+// Build and display filters by categories
 buildAndDisplayFilters(allCategories);
 
 // Displaying a list of works

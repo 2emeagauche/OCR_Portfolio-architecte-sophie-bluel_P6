@@ -1,3 +1,5 @@
+// We declare all the API interfaces and export them to be used in main.js and login.js
+
 async function getAllWorks() {
   return fetch(apiLocalPath + "/works").then(response => response.json());
 }
