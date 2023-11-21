@@ -1,12 +1,10 @@
 import {getAllWorks, getAllCategories, deleteWork, addWork} from "./api-requests.js";
 
-// Get all the works from localStorage or server
+// Store all the works from server
 let allWorks = [];
-
-// Used at first use or after admin modifications
 allWorks = await getAllWorks();
 
-// Get all the categories from localStorage or server
+// Get all the categories from server
 let allCategories = [];
 allCategories = await getAllCategories();
 
@@ -15,44 +13,118 @@ displayWorks(allWorks);
 // Build and display filters
 buildAndDisplayFilters(allCategories);
 
+// Displaying a list of works
+function displayWorks(list) {
+  // We flush the gallery from its content
+  galleryElement.innerHTML = "";
+  // We loop through the works and using an html template
+  for (let i = 0; i < list.length; i++) {
+    galleryElement.innerHTML += galleryTileTemplate(list[i].id, list[i].imageUrl, list[i].title);
+  }
+}
 
+function galleryTileTemplate(id, url, title) {
+  return `<figure data-id="${id}">
+            <img
+            src="${url}"
+            alt="${title}"
+            />
+            <figcaption>${title}</figcaption>
+          </figure>`;
+}
+
+// Build and display filters
+function buildAndDisplayFilters(cat) {
+  let filtersElement = document.createElement("div");
+
+  // Create button "All" in any case to display all works
+  let buttonAllCatElement = document.createElement("button");
+  let portfolioTitle = portfolioElement.querySelector(".portfolio-title-block");
+  filtersElement.classList.add("filtres");
+  buttonAllCatElement.classList.add("button","active");
+  buttonAllCatElement.innerText = "Tous";
+  filtersElement.appendChild(buttonAllCatElement);
+
+  // Filtering all works
+  filtering(buttonAllCatElement);
+  
+  // Based on the category returned by the API we create a button for each one
+  for (let i = 0; i < cat.length; i++) {
+    let button = document.createElement("button");
+    button.classList.add("button");
+    button.innerText = cat[i].name;
+    filtersElement.appendChild(button);
+   
+    // Filtering by category
+    filtering(button, cat[i].id);
+  }
+  
+  // Inserting filters buttons in th DOM
+  portfolioTitle.after(filtersElement);
+}
+
+// Selecting works based on their categories
+function filtering(button, id) {
+  button.addEventListener("click", (e) => {
+    if(id !== undefined) {
+      const catWorks = allWorks.filter(work => work.categoryId === id);
+      displayWorks(catWorks);
+    } else {
+      displayWorks(allWorks);
+    }
+    // Update active state on the buttons
+    document.querySelector(".active").classList.remove("active");
+    button.classList.add("active");
+  });
+}
+
+/*---------------------------------------------
+                Admin Mode 
+----------------------------------------------*/
 let adminMode = sessionStorage.getItem("adminMode") ?? false;
 let token = sessionStorage.getItem("auth") ?? "";
 const bodyElem = document.querySelector("body");
 const loginCta = document.getElementById("login-cta");
 
 const adminModal = document.getElementById("admin-modal");
-const adminModalContent = document.querySelector(".protect-from-close-event");
-const buttonEdit = document.querySelector(".edit-gallery");
+const adminModalContent = document.querySelector(".admin-modal-content");
+const buttonEditGallery = document.querySelector(".edit-gallery");
 
 let imgUploadedType = "";
-// let imgUploadedSize = 0;
-let imgBin = null;
+let imgFile = null;
 let workTitle = "";
 let workCat = null;
 
-// Display admin mode on Home Page
+// Display admin mode on Home Page when login successfull
 if(adminMode) {
+  // When class "admin-mode" is added to the body then :
+  // - the banner "Mode édition" is shown
+  // - the filters are hidden
+  // - the button "modifier" is shown and activated to open the modal
   bodyElem.classList.add("admin-mode");
-  // Change Login link in header to Logout
+  
+  // Change Login link in header to "Logout"
   loginCta.innerText = "Logout";
-  // Apply reset routine to logout
-  loginCta.addEventListener("click", (e) => disableAdminMode(e), {once: true});
+
+  // When Logout is clicked return to public mode
+  loginCta.addEventListener("click", (e) => {
+    // On logout we remove admin mode specific styles and session infos
+    disableAdminMode(e);
+  }, {once: true});
 
   // Opening the modal when "modifier" is clicked
-  buttonEdit.addEventListener("click", () => {
-    // Populate the modal with photos to delete
+  buttonEditGallery.addEventListener("click", () => {
+    // Populate the modal with the list of works to delete then open the modal
     feedModalWithPhotos(adminModalContent);
     adminModal.showModal();
   });
-
   
   // Allow click on outside the modal to close it
   adminModal.addEventListener("click", () => {
     closingModal(adminModal);
-    // adminModal.close();
   });
-  // Prevent closing the modal anywhere in the the modal but X symbol
+
+  // Prevent closing the modal when clicking in the modal except for button.close-modal
   adminModalContent.addEventListener("click", (e) => {
     if(e.target.classList[0] === "close-modal") {
       closingModal(adminModal);
@@ -60,41 +132,64 @@ if(adminMode) {
       e.stopPropagation();
     }
   });
+}
 
+function disableAdminMode(e) {
+  e.preventDefault(); // empèche la navigation vers le lien spécifié dans la balise
+  bodyElem.classList.remove("admin-mode");
+  adminMode = false;
+  token = "";
+  sessionStorage.removeItem("adminMode");
+  sessionStorage.removeItem("auth");
+  sessionStorage.removeItem("tokenCreationDate");
+  loginCta.innerText = "Login";
 }
 
 function closingModal(modal) {
   modal.close();
 }
 
-// Populate the modal with photos to delete / declaration
 function feedModalWithPhotos(contentZone) {
   let htmlTemplate = `<button class="close-modal"></button>
                       <h2>Galerie photo</h2>
                       <div class="gallery">`;
   
-  // We loop through the works to display each images in the modal
+  // We loop through the works to display each image in the modal
   for (let i = 0; i < allWorks.length; i++) {
-    htmlTemplate += modalTileTemplate(allWorks[i].id, allWorks[i].imageUrl, allWorks[i].title);
+    htmlTemplate += `<figure>
+                      <img
+                      src="${allWorks[i].imageUrl}"
+                      alt="${allWorks[i].title}"
+                      />
+                      <button class="remove-work" data-id="${allWorks[i].id}"></button>
+                    </figure>`;
   }
   htmlTemplate +=  `</div>
   <hr />
   <button class="add-work">Ajouter une photo</button>`;
   contentZone.innerHTML = htmlTemplate;
+
+  // Removing class ".add-content" specific to phase 2 of the modal for styling specificities
   contentZone.classList.remove("add-content");
   
-  // we attach the delete request to each trash button
+  // For each trash button ("button.remove-work")
   const trashButtons = document.querySelectorAll(".remove-work");
   for (let i = 0; i < trashButtons.length; i++) {
     trashButtons[i].addEventListener("click", async (e) => {
+      // Identifying the work Id via the "data-id" attribute
       const id = e.target.dataset.id;
-      let loginStatus = 0;
+      // Initialize the api response status
+      let responseStatus = 0;
+      // if the token is not expired then requesting the api to delete the work
       if(isTokenGood()) {
         await deleteWork(id, token).then((response) => {
-          loginStatus = response.status;
+          responseStatus = response.status;
         });
-        // When the API confirms the deletion we remove the image from the popin and from the home page and we refresh the array allWorks
-        if(/^2\d{2}$/.test(loginStatus)) {
+        // When the API confirms the deletion with a status of 2**:
+        // - we remove the image from the popin
+        // - and from the home page
+        // - we refresh the array allWorks
+        if(/^2\d{2}$/.test(responseStatus)) {
           e.target.parentNode.remove();
           galleryElement.querySelector(`[data-id="${id}"]`).remove();
           allWorks = await getAllWorks();
@@ -105,21 +200,11 @@ function feedModalWithPhotos(contentZone) {
     }, {once: true});
   }
 
-  // Modify the modal when click on "Ajouter"
+  // Modify the modal when click on "Ajouter" to display the form to add a work
   const addWorkButton = document.querySelector(".add-work");
   addWorkButton.addEventListener("click", () => {
     feedModalWithAddForm(contentZone);
-  });
-}
-
-function modalTileTemplate(id, url, title) {
-  return `<figure>
-            <img
-            src="${url}"
-            alt="${title}"
-            />
-            <button class="remove-work" data-id="${id}"></button>
-          </figure>`;
+  }, {once: true});
 }
 
 function isTokenGood() {
@@ -133,9 +218,8 @@ function isTokenGood() {
   }
 }
 
-
-// Populate the modal with add photo form
 function feedModalWithAddForm(contentZone) {
+  // building the form to add a work
   let htmlTemplate = `<button class="close-modal"></button>
                       <button class="debut-modal"></button>
                       <h2>Ajout photo</h2>
@@ -177,44 +261,43 @@ function feedModalWithAddForm(contentZone) {
   contentZone.innerHTML = htmlTemplate;
   contentZone.classList.add("add-content");
     
-  // Go back to deleting step when click on left arrow
+  // Go back to previous phase of the modal (works to delete) when click on left arrow
   document.querySelector(".debut-modal").addEventListener("click", () => {
     feedModalWithPhotos(contentZone);
   }, {once:true});
     
-  const addWorkForm = document.getElementById("add-work-form");
-  checkForm(addWorkForm);
-  addWorkForm.addEventListener("submit", async (e) => {
+  const theForm = document.getElementById("add-work-form");
+  // The submit input is disabled by default
+  // The checkForm function verifyies if all inputs are ok and then enables the submit input
+  checkForm(theForm);
+  // We don't need to wait for the submit input to be enabled to attach the submit listener to the form
+  theForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    let loginstatus = NaN;
+    let responseStatus = NaN;
+    // if the token is not expired then requesting the api to add the work
     if(isTokenGood()) {
-      const loginResponse = await addWork(imgBin, workTitle, workCat, token)
+      const response = await addWork(imgFile, workTitle, workCat, token)
       .then(response => {
-        loginstatus = response.status;
+        responseStatus = response.status;
         return response.json();
-      })
-      .catch(error => console.log('error', error));
-      if(/^2\d{2}$/.test(loginstatus)) {
-        galleryElement.innerHTML += galleryTileTemplate(loginResponse.id, loginResponse.imageUrl, loginResponse.title);
+      });
+      // When the API confirms the work is added in database with a status of 2**:
+      // - we add the new work at the end of the home page gallery
+      // - we refresh the allWorks array by requesting all the works to the API (so if go back to modal step 1 the gallery of works to delete is updated)
+      // - we display a confirm popin to inform it is a success and ask to add another work. If agreed we reset the form. If denied we close the modal.
+      if(/^2\d{2}$/.test(responseStatus)) {
+        galleryElement.innerHTML += galleryTileTemplate(response.id, response.imageUrl, response.title);
         allWorks = await getAllWorks();
-        if(window.confirm("L'élément a été ajouté avec succès. Continuer ?")) resetAddForm(addWorkForm);
+        if(window.confirm("L'élément a été ajouté avec succès. Continuer ?")) resetForm(theForm);
         else closingModal(adminModal);
+      // If not display an alert with status code or unknown error
       } else {
-        alert("Erreur : " + loginstatus || "inconnue");
+        alert("Erreur : " + responseStatus || "inconnue");
       }
     } else {
       alert("La connexion a expiré");
     }
   });
-  
-}
-
-function resetAddForm(theform) {
-  theform.querySelector(".file-preview").childNodes[0].remove();
-  theform.querySelector(".file-box").classList.remove("file-box__preview");
-  theform.querySelector(".modal-submit").setAttribute("disabled","");
-  theform.querySelector("#titre").value = "";
-  theform.querySelector("#category").value = "";
 }
 
 function checkForm(theform) {
@@ -224,47 +307,77 @@ function checkForm(theform) {
   const submitElt = theform.querySelector(".modal-submit");
   const specsText = theform.querySelector(".file-label-limits");
   const filePreview = theform.querySelector(".file-preview");
+  
+  // Verifying the file input on change event
   fileElt.addEventListener("change", (e) => {
+    // Cleaning the html
+    // - Dealing with the case where an image has been chosen but we want to change
     if(filePreview.hasChildNodes()) {
       filePreview.childNodes[0].remove();
       theform.querySelector(".file-box").classList.remove("file-box__preview");
     }
+    // - Removing the error message if a wrong image was chosen
     if(theform.querySelector(".img-error-msg") !== null) theform.querySelector(".img-error-msg").remove();
+
+    // Checking the image size and type. If good display a preview and test other inputs to enable submit
     if(checkImage(fileElt)) {
       previewImage(fileElt.files[0]);
       enableSubmit(fileElt.files[0], titleElt.value, categoryElt.value, submitElt);
+    // if not good display an error message
     } else {
       displayImgErrorMsg(specsText);
     }
   });
+  
+  // Verifying the title input on change event
   titleElt.addEventListener("change", (e) => {
+    // test inputs to enable submit
     enableSubmit(fileElt.files[0], titleElt.value, categoryElt.value, submitElt);
   });
+  
+  // Verifying the category selector on change event
   categoryElt.addEventListener("change", (e) => {
+    // test inputs to enable submit
     enableSubmit(fileElt.files[0], titleElt.value, categoryElt.value, submitElt);
   });
 }
 
 function checkImage(fileElt) {
-  // Calcul de la taille totale
   let numberOfBytes = 0;
   const file = fileElt.files[0];
   imgUploadedType = file.type;
   numberOfBytes = file.size;
+  // Return true if size is below 4 Mo and type is jpg or png. False otherwise.
+  return ((numberOfBytes / 1048576).toFixed(1) < 4 && /jpeg|png/.test(imgUploadedType));
 
-  // Approximation à l'unité humaine la plus proche
-  const units = ["o", "Ko", "Mo", "Go", "To", "Po", "Eo", "Zo", "Yo"];
-  const exponent = Math.min(
-    Math.floor(Math.log(numberOfBytes) / Math.log(1024)),
-    units.length - 1,
-  );
-  const approx = numberOfBytes / 1024 ** exponent;
-  // imgUploadedSize = exponent === 0
-  //                 ? `${numberOfBytes} octets`
-  //                 : `${approx.toFixed(3)} ${units[exponent]}`;
-                
-  return ((exponent === 2 && approx.toFixed(3) < 4) || exponent < 2) && /jpeg|png/.test(imgUploadedType);
+}
 
+function previewImage(file) {
+  const img = document.createElement("img");
+  const filePreview = document.querySelector(".file-preview");
+  filePreview.innerHTML = "";
+  document.querySelector(".file-box").classList.add("file-box__preview");
+  
+  // Code from MDN https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications#example_showing_thumbnails_of_user-selected_images
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+
+  filePreview.appendChild(img);
+}
+  
+function enableSubmit(a,b,c,d) {
+  // If all fields ok store values in variables
+  if(a && !!b && !!c) {
+    imgFile = a;
+    workTitle = b;
+    workCat = c;
+    d.removeAttribute("disabled");
+  }
+  // if not disabling submit
+  else d.setAttribute("disabled","");
 }
 
 function displayImgErrorMsg(spectext) {
@@ -274,104 +387,10 @@ function displayImgErrorMsg(spectext) {
   spectext.after(imgErrorMsg);
 }
 
-function previewImage(file) {
-    const img = document.createElement("img");
-    const filePreview = document.querySelector(".file-preview");
-    img.classList.add("obj");
-    img.file = file;
-    filePreview.innerHTML = "";
-    document.querySelector(".file-box").classList.add("file-box__preview");
-    filePreview.appendChild(img); // Où  "preview" correspond à l'élément div où on affiche le contenu.
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-  
-function enableSubmit(a,b,c,d) {
-  if(a && !!b && !!c) {
-    imgBin = a;
-    workTitle = b;
-    workCat = c;
-    d.removeAttribute("disabled");
-  }
-  else d.setAttribute("disabled","");
-}
-
-// On logout we remove admin mode specific styles and session infos
-function disableAdminMode(e) {
-  e.preventDefault();
-  bodyElem.classList.remove("admin-mode");
-  adminMode = false;
-  token = "";
-  sessionStorage.removeItem("adminMode");
-  sessionStorage.removeItem("auth");
-  sessionStorage.removeItem("tokenCreationDate");
-  loginCta.innerText = "Login";
-}
-
-// Displaying a list of works
-function displayWorks(list) {
-  // We flush the gallery from its content
-  galleryElement.innerHTML = "";
-  // We loop through the works and using an html template
-  for (let i = 0; i < list.length; i++) {
-    galleryElement.innerHTML += galleryTileTemplate(list[i].id, list[i].imageUrl, list[i].title);
-  }
-}
-
-function galleryTileTemplate(id, url, title) {
-  return `<figure data-id="${id}">
-            <img
-            src="${url}"
-            alt="${title}"
-            />
-            <figcaption>${title}</figcaption>
-          </figure>`;
-}
-
-// Build and display filters
-function buildAndDisplayFilters(cat) {
-  let filtersElement = document.createElement("div");
-
-  // Create button "All" in any case to display all works
-  let buttonAllCatElement = document.createElement("button");
-  let portfolioTitle = portfolioElement.querySelector(".portfolio-title-block");
-  filtersElement.classList.add("filtres");
-  buttonAllCatElement.classList.add("button","active");
-  buttonAllCatElement.innerText = "Tous";
-  filtersElement.appendChild(buttonAllCatElement);
-
-  // Display all works
-  filtering(buttonAllCatElement);
-  
-  // Based on the categories return by the API we create a button for each one
-  for (let i = 0; i < cat.length; i++) {
-    let button = document.createElement("button");
-    button.classList.add("button");
-    button.innerText = cat[i].name;
-    filtersElement.appendChild(button);
-   
-    // Display specific works based on their category
-    filtering(button, cat[i].id);
-  }
-  
-  portfolioTitle.after(filtersElement);
-}
-
-// Selecting works based on their categories
-function filtering(button, id) {
-  button.addEventListener("click", (e) => {
-    if(id !== undefined) {
-      const catWorks = allWorks.filter(work => work.categoryId === id);
-      displayWorks(catWorks);
-    } else {
-      displayWorks(allWorks);
-    }
-    // Update active state on the buttons
-    document.querySelector(".active").classList.remove("active");
-    button.classList.add("active");
-  });
+function resetForm(theform) {
+  theform.querySelector(".file-preview").childNodes[0].remove();
+  theform.querySelector(".file-box").classList.remove("file-box__preview");
+  theform.querySelector(".modal-submit").setAttribute("disabled","");
+  theform.querySelector("#titre").value = "";
+  theform.querySelector("#category").value = "";
 }
