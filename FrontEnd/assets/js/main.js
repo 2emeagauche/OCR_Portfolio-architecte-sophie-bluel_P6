@@ -12,9 +12,11 @@ allCategories = await getAllCategories();
 displayWorks(allWorks);
 // Build and display filters by categories
 buildAndDisplayFilters(allCategories);
+console.log("Categories", allCategories);
 
 // Displaying a list of works
 function displayWorks(list) {
+  console.log("Projets", list);
   // We flush the gallery from its content
   galleryElement.innerHTML = "";
   // We loop through the works and using an html template
@@ -25,10 +27,7 @@ function displayWorks(list) {
 
 function galleryTileTemplate(id, url, title) {
   return `<figure data-id="${id}">
-            <img
-            src="${url}"
-            alt="${title}"
-            />
+            <img src="${url}" alt="${title}" />
             <figcaption>${title}</figcaption>
           </figure>`;
 }
@@ -59,7 +58,7 @@ function buildAndDisplayFilters(cat) {
     filtering(button, cat[i].id);
   }
   
-  // Inserting filters buttons in th DOM
+  // Inserting filters buttons in the DOM
   portfolioTitle.after(filtersElement);
 }
 
@@ -156,12 +155,12 @@ function feedModalWithPhotos(contentZone) {
   
   // We loop through the works to display each image in the modal
   for (let i = 0; i < allWorks.length; i++) {
-    htmlTemplate += `<figure>
+    htmlTemplate += `<figure data-id="${allWorks[i].id}">
                       <img
                       src="${allWorks[i].imageUrl}"
                       alt="${allWorks[i].title}"
                       />
-                      <button class="remove-work" data-id="${allWorks[i].id}"></button>
+                      <button class="remove-work"></button>
                     </figure>`;
   }
   htmlTemplate +=  `</div>
@@ -177,7 +176,7 @@ function feedModalWithPhotos(contentZone) {
   for (let i = 0; i < trashButtons.length; i++) {
     trashButtons[i].addEventListener("click", async (e) => {
       // Identifying the work Id via the "data-id" attribute
-      const id = e.target.dataset.id;
+      const id = e.target.parentNode.dataset.id;
       // Initialize the api response status
       let responseStatus = 0;
       // if the token is not expired then requesting the api to delete the work
@@ -190,7 +189,7 @@ function feedModalWithPhotos(contentZone) {
         // - and from the home page
         // - we refresh the array allWorks
         if(/^2\d{2}$/.test(responseStatus)) {
-          e.target.parentNode.remove();
+          contentZone.querySelector(`[data-id="${id}"]`).remove();
           galleryElement.querySelector(`[data-id="${id}"]`).remove();
           allWorks = await getAllWorks();
         }

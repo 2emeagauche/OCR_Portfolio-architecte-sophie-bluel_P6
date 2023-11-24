@@ -35,7 +35,7 @@ async function addWork(image, title, category, token) {
   const formData = new FormData();
   formData.append("image", image);
   formData.append("title", title);
-  formData.append("category", "" + category);
+  formData.append("category", parseInt(category));
   return fetch(apiLocalPath + "/works", {
     method: "POST",
     headers: {
