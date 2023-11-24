@@ -1,16 +1,16 @@
 import {authentication} from "./api-requests.js";
 
-// manage login to admin mode
+// CONNEXION AU MODE ADMIN
 
 const loginForm = document.querySelector("#login-form");
 const emailField = document.getElementById("email");
 const passwordField = document.getElementById("password");
 
-// Removing errors when focusing in fields
+// ON SUPPRIME L'AFFICHAGE DES ERREURS AU FOCUS
 emailField.addEventListener("focus", removeError);
 passwordField.addEventListener("focus", removeError);
 
-// On submitting the form we call the API
+// ON REQUETE L'API AU SUBMIT
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   let emailVal = emailField.value.trim();
@@ -24,13 +24,14 @@ loginForm.addEventListener("submit", async (e) => {
   .catch((e) => {
     responseStatus = NaN;
   });
-  // If API response status is 2** then 
-  // - we store the token in session storage
-  // - we set adminMode to true
-  // - we redirect to home page
+  // SI LE STATUT EST 2** (VALIDE)
+  // - ON ENREGISTRE LE TOKEN EN SESSION
+  // - ON MET LA VARIABME adminMode A VRAI
+  // - ON ENREGISTRE LA DATE DE CREATION DU TOKEN
+  // - ON REDIRIGE VERS LA PAGE D'ACCUEIL
   if(/^2\d{2}$/.test(responseStatus)) {
     enableAdminMode(response);
-  // If not we display error message according to other response status code
+  // SINON ON AFFICHE L'EREUR
   } else {
     displayError(responseStatus);
   }
@@ -39,13 +40,9 @@ loginForm.addEventListener("submit", async (e) => {
 function enableAdminMode(response) {
   const date = new Date();
   const now = date.getTime();
-  // We store the adminMode value
   sessionStorage.setItem("adminMode", "true");
-  // We store the token
   sessionStorage.setItem("auth", response.token);
-  // We store the token creation date to further check if it is not expired
   sessionStorage.setItem("tokenCreationDate", now);
-  // We redirect to home page
   window.location = "./index.html";
 }
 

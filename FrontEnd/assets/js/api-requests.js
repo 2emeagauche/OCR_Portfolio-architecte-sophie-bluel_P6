@@ -1,4 +1,4 @@
-// We declare all the API interfaces and export them to be used in main.js and login.js
+// ON DECLARE TOUTES LES APPELS A L'API DONT ON A BESOIN ET ON LES EXPORTE POUR LEUR UTILISATION DANS main.js ET login.js
 
 async function getAllWorks() {
   return fetch(apiLocalPath + "/works").then(response => response.json());

@@ -1,25 +1,26 @@
 import {getAllWorks, getAllCategories, deleteWork, addWork} from "./api-requests.js";
 
-// Store all the works from server
+// ENREGISTRE TOUS LES PROJETS RETOURNER PAR LE SERVEUR DANS UNE VARIABLE
 let allWorks = [];
 allWorks = await getAllWorks();
 
-// Get all the categories from server
+// ENREGISTRE TOUTES LES CATEGORIES RETOURNER PAR LE SERVEUR DANS UNE VARIABLE
 let allCategories = [];
 allCategories = await getAllCategories();
 
-// Display all works on Home Page
+// AFFICHE TOUS LES PROJETS SUR LA PAGE
 displayWorks(allWorks);
-// Build and display filters by categories
+
+// CONSTRUIT ET AFFICHE LES CATEGORIES DANS LES BOUTONS DE FILTRES
 buildAndDisplayFilters(allCategories);
 console.log("Categories", allCategories);
 
-// Displaying a list of works
+// AFFICHE LES PROJETS DANS LA GALERIE
 function displayWorks(list) {
   console.log("Projets", list);
-  // We flush the gallery from its content
+  // ON VIDE LE CONTENEUR 
   galleryElement.innerHTML = "";
-  // We loop through the works and using an html template
+  // ON BOUCLE SUR LE TABLEAU ET ON UTILISE UN TEMPLATE HTML
   for (let i = 0; i < list.length; i++) {
     galleryElement.innerHTML += galleryTileTemplate(list[i].id, list[i].imageUrl, list[i].title);
   }
@@ -32,11 +33,10 @@ function galleryTileTemplate(id, url, title) {
           </figure>`;
 }
 
-// Build and display filters
 function buildAndDisplayFilters(cat) {
   let filtersElement = document.createElement("div");
 
-  // Create button "All" in any case to display all works
+  // ON CREER DE TOUTE FACON LE BOURON "TOUS"
   let buttonAllCatElement = document.createElement("button");
   let portfolioTitle = portfolioElement.querySelector(".portfolio-title-block");
   filtersElement.classList.add("filtres");
@@ -44,25 +44,25 @@ function buildAndDisplayFilters(cat) {
   buttonAllCatElement.innerText = "Tous";
   filtersElement.appendChild(buttonAllCatElement);
 
-  // Filtering all works
+  // ON APPELLE LA FONCTION DE FILTRAGE SUR LE BOUTON "TOUS"
   filtering(buttonAllCatElement);
   
-  // Based on the category returned by the API we create a button for each one
+  // ON BOUCLE SUR LE TABLEAU DE CATEGORIE POUR CREER LES BOUTONS SUIVANTS
   for (let i = 0; i < cat.length; i++) {
     let button = document.createElement("button");
     button.classList.add("button");
     button.innerText = cat[i].name;
     filtersElement.appendChild(button);
    
-    // Filtering by category
+    // ON APPELLE LA FONCTION DE FILTRAGE AVEC L'ID DE LA CATEGORIE
     filtering(button, cat[i].id);
   }
   
-  // Inserting filters buttons in the DOM
+  // AFFICHE LES FILTRES
   portfolioTitle.after(filtersElement);
 }
 
-// Selecting works based on their categories
+// ON SELECTIONNE LES PROJETS DE LA CATEGORIE DEMANDEE
 function filtering(button, id) {
   button.addEventListener("click", (e) => {
     if(id !== undefined) {
@@ -71,15 +71,18 @@ function filtering(button, id) {
     } else {
       displayWorks(allWorks);
     }
-    // Update active state on the buttons
+    // ON CHANGE L'ETAT ACTIF DU BOUTON
     document.querySelector(".active").classList.remove("active");
     button.classList.add("active");
   });
 }
 
+
+
 /*---------------------------------------------
-                Admin Mode 
+                MODE EDITION
 ----------------------------------------------*/
+
 let adminMode = sessionStorage.getItem("adminMode") ?? false;
 let token = sessionStorage.getItem("auth") ?? "";
 const bodyElem = document.querySelector("body");
@@ -94,36 +97,35 @@ let imgFile = null;
 let workTitle = "";
 let workCat = null;
 
-// Display admin mode on Home Page when login successfull
+// SI LOGIN OK ON MODIFIE LA PAGE D'ACCUEIL
 if(adminMode) {
-  // When class "admin-mode" is added to the body then :
-  // - the banner "Mode édition" is shown
-  // - the filters are hidden
-  // - the button "modifier" is shown and activated to open the modal
+  // QUAND LA CLASSE "admin-mode" EST AJOUTEE AU BODY :
+  // - LE BANDEAU "mode edition" EST AFFICHE
+  // - LES FILTRES SONT CACHES
+  // - LE BOUTON "modifier" EST AFFICHE ET ACTIVE
   bodyElem.classList.add("admin-mode");
   
-  // Change Login link in header to "Logout"
+  // LOGIN DEVIENT LOGOUT
   loginCta.innerText = "Logout";
 
-  // When Logout is clicked return to public mode
+  // AU LOGOUT ON RETOURNE AU MODE PUBLIC
   loginCta.addEventListener("click", (e) => {
-    // On logout we remove admin mode specific styles and session infos
     disableAdminMode(e);
   }, {once: true});
 
-  // Opening the modal when "modifier" is clicked
+  // OUVERTURE DE LA MODAL
   buttonEditGallery.addEventListener("click", () => {
-    // Populate the modal with the list of works to delete then open the modal
+    // ON CONSTRUIT L'AFFICHAGE DES PROJETS DANS LA MODAL
     feedModalWithPhotos(adminModalContent);
     adminModal.showModal();
   });
   
-  // Allow click on outside the modal to close it
+  // FERMETURE DE LA MODAL AU CLIC A L'EXTERIEUR
   adminModal.addEventListener("click", () => {
     closingModal(adminModal);
   });
 
-  // Prevent closing the modal when clicking in the modal except for button.close-modal
+  // EMPECHE LA FERMETURE DE LA MODAL AU CLIC A L'INTERIEUR DE LA MODAL SAUF SUR LE BOUTON CROIX
   adminModalContent.addEventListener("click", (e) => {
     if(e.target.classList[0] === "close-modal") {
       closingModal(adminModal);
@@ -134,7 +136,7 @@ if(adminMode) {
 }
 
 function disableAdminMode(e) {
-  e.preventDefault(); // empèche la navigation vers le lien spécifié dans la balise
+  e.preventDefault();
   bodyElem.classList.remove("admin-mode");
   adminMode = false;
   token = "";
@@ -153,7 +155,7 @@ function feedModalWithPhotos(contentZone) {
                       <h2>Galerie photo</h2>
                       <div class="gallery">`;
   
-  // We loop through the works to display each image in the modal
+  // ON BOUCLE SUR LE TABLEAU POUR AFFICHER CHAQUE IMAGE DES PROJETS ET ON AJOUTE LES BOUTONS CORBEILLE
   for (let i = 0; i < allWorks.length; i++) {
     htmlTemplate += `<figure data-id="${allWorks[i].id}">
                       <img
@@ -168,26 +170,26 @@ function feedModalWithPhotos(contentZone) {
   <button class="add-work">Ajouter une photo</button>`;
   contentZone.innerHTML = htmlTemplate;
 
-  // Removing class ".add-content" specific to phase 2 of the modal for styling specificities
+  // ON SUPPRIME LA CLASS "add-content" SPECIFIQUE A LA PHASE 2
   contentZone.classList.remove("add-content");
   
-  // For each trash button ("button.remove-work")
+  // POUR CHAQUE BOUTON CORBEILLE ("button.remove-work")
   const trashButtons = document.querySelectorAll(".remove-work");
   for (let i = 0; i < trashButtons.length; i++) {
     trashButtons[i].addEventListener("click", async (e) => {
-      // Identifying the work Id via the "data-id" attribute
+      // IDENTIFIE LE PROJET ID VIA L'ATTRIBUT "data-id"
       const id = e.target.parentNode.dataset.id;
-      // Initialize the api response status
+      // INITIALISATION DU STATUT DE LA REPONSE DE L'API
       let responseStatus = 0;
-      // if the token is not expired then requesting the api to delete the work
+      // SI LE TOKEN N'EST PAS EXPIRE ON REQUETE L'API POUR SUPPRIMER LE PROJET
       if(isTokenGood()) {
         await deleteWork(id, token).then((response) => {
           responseStatus = response.status;
         });
-        // When the API confirms the deletion with a status of 2**:
-        // - we remove the image from the popin
-        // - and from the home page
-        // - we refresh the array allWorks
+        // QUAND L'API CONFIRME LA SUPPRESSION PAR UN STATUT 2**:
+        // - ON SUPPRIME L'IMAGE DE LA MODAL
+        // - ET DE LA PAGE
+        // - MET A JOUR LE TABLEAU "allWorks"
         if(/^2\d{2}$/.test(responseStatus)) {
           contentZone.querySelector(`[data-id="${id}"]`).remove();
           galleryElement.querySelector(`[data-id="${id}"]`).remove();
@@ -199,7 +201,7 @@ function feedModalWithPhotos(contentZone) {
     }, {once: true});
   }
 
-  // Modify the modal when click on "Ajouter" to display the form to add a work
+  // AU CLIC SUR AJOUTER ON CHANGE LE HTML DE LA MODAL POUR AFFICHER A LA PLACE LE FORMULAIRE DE CONNEXION
   const addWorkButton = document.querySelector(".add-work");
   addWorkButton.addEventListener("click", () => {
     feedModalWithAddForm(contentZone);
@@ -218,7 +220,6 @@ function isTokenGood() {
 }
 
 function feedModalWithAddForm(contentZone) {
-  // building the form to add a work
   let htmlTemplate = `<button class="close-modal"></button>
                       <button class="debut-modal"></button>
                       <h2>Ajout photo</h2>
@@ -260,36 +261,36 @@ function feedModalWithAddForm(contentZone) {
   contentZone.innerHTML = htmlTemplate;
   contentZone.classList.add("add-content");
     
-  // Go back to previous phase of the modal (works to delete) when click on left arrow
+  // AU CLIC SUR LA FLECHE EN HAUT A GAUCHE ON REAFFICHE LA GALERIE DE SUPPRESSION
   document.querySelector(".debut-modal").addEventListener("click", () => {
     feedModalWithPhotos(contentZone);
   }, {once:true});
     
   const theForm = document.getElementById("add-work-form");
-  // The submit input is disabled by default
-  // The checkForm function verifyies if all inputs are ok and then enables the submit input
+  // LE BOUTON DE SOUMISSION EST DESACTIVE PAR DEFAUT
+  // LA FONCTION "checkForm" VERIFIE QUE TOUS LES CHAMPS SONT OK ET ACTIVE LE BOUTON DE SOUMISSION
   checkForm(theForm);
-  // We don't need to wait for the submit input to be enabled to attach the submit listener to the form
+  // ON A PAS BESOIN D'ATTENDRE LA VALIDATION POUR CREER LE COMPORTEMENT DE SOUMISSION
   theForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     let responseStatus = NaN;
-    // if the token is not expired then requesting the api to add the work
+    // SI LE TOKEN N'EST PAS EXPIRE ON REQUETE L'API POUR AJOUTER LE PROJET
     if(isTokenGood()) {
       const response = await addWork(imgFile, workTitle, workCat, token)
       .then(response => {
         responseStatus = response.status;
         return response.json();
       });
-      // When the API confirms the work is added in database with a status of 2**:
-      // - we add the new work at the end of the home page gallery
-      // - we refresh the allWorks array by requesting all the works to the API (so if go back to modal step 1 the gallery of works to delete is updated)
-      // - we display a confirm popin to inform it is a success and ask to add another work. If agreed we reset the form. If denied we close the modal.
+      // QUAND L'API RENVOI UN STATUT 2** CELA CONFIRME QUE LE PROJET A ETE AJOUTE EN BASE
+      // - ON AJOUTE LE PROJET A LA GALERIE DE LA PAGE D'ACCUEIL
+      // - ON MET A JOUR LA TABLEAU "allWorks" EN REFESANT UNE REQUETE A L'API (SI ON RETOURNE A L'ETAPE 1 LA MODAL SE MET A JOUR)
+      // - ON AFFICHE UNE BOITE DE CONFIRMATION ET ON DEMANDE STOP OU ENCORE. SI ENCORE ON REINITIALISE LE FORMULAIRE SINON ON FERME LA MODAL
       if(/^2\d{2}$/.test(responseStatus)) {
         galleryElement.innerHTML += galleryTileTemplate(response.id, response.imageUrl, response.title);
         allWorks = await getAllWorks();
         if(window.confirm("L'élément a été ajouté avec succès. Continuer ?")) resetForm(theForm);
         else closingModal(adminModal);
-      // If not display an alert with status code or unknown error
+      // SI L'API NE RENVOIE PAS UN STATUT 2** ON AFFICHE LE CODE ERREUR OU ERREUR INCONNUE
       } else {
         alert("Erreur : " + responseStatus || "inconnue");
       }
@@ -307,36 +308,37 @@ function checkForm(theform) {
   const specsText = theform.querySelector(".file-label-limits");
   const filePreview = theform.querySelector(".file-preview");
   
-  // Verifying the file input on change event
+  // ON VERIFIE LE CHAMP FILE SUR L'EVENEMENT CHANGE
   fileElt.addEventListener("change", (e) => {
-    // Cleaning the html
-    // - Dealing with the case where an image has been chosen but we want to change
+    // ON RESET LE HTML SI CE N'EST PAS LA PREMIERE FOIS
+    // - CAS OU ON VEUX CHANGER D'IMAGE
     if(filePreview.hasChildNodes()) {
       filePreview.childNodes[0].remove();
       theform.querySelector(".file-box").classList.remove("file-box__preview");
     }
-    // - Removing the error message if a wrong image was chosen
+    // - SUPPRESSION DU MESSAGE D'ERREUR
     if(theform.querySelector(".img-error-msg") !== null) theform.querySelector(".img-error-msg").remove();
 
-    // Checking the image size and type. If good display a preview and test other inputs to enable submit
+    // VERIFICATION DU POIDS ET DU TYPE D'IMAGE. SI OK AFFICHAGE D'UNE PREVISUALISATION
     if(checkImage(fileElt)) {
       previewImage(fileElt.files[0]);
+      // ON VERIFIE TOUS LES CHAMPS POUR POUVOIR ACTIVER LE BOUTON VALIDER
       enableSubmit(fileElt.files[0], titleElt.value, categoryElt.value, submitElt);
-    // if not good display an error message
+    // SINON AFFICHE DU MESSAGE D'ERREUR
     } else {
       displayImgErrorMsg(specsText);
     }
   });
   
-  // Verifying the title input on change event
+  // VERIFICATION DU CHAMP TITRE
   titleElt.addEventListener("change", (e) => {
-    // test inputs to enable submit
+    // ON VERIFIE TOUS LES CHAMPS POUR POUVOIR ACTIVER LE BOUTON VALIDER
     enableSubmit(fileElt.files[0], titleElt.value, categoryElt.value, submitElt);
   });
   
-  // Verifying the category selector on change event
+  // VERIFICATION DU SELECTEUR DE CATEGORIES
   categoryElt.addEventListener("change", (e) => {
-    // test inputs to enable submit
+    // ON VERIFIE TOUS LES CHAMPS POUR POUVOIR ACTIVER LE BOUTON VALIDER
     enableSubmit(fileElt.files[0], titleElt.value, categoryElt.value, submitElt);
   });
 }
@@ -346,7 +348,7 @@ function checkImage(fileElt) {
   const file = fileElt.files[0];
   imgUploadedType = file.type;
   numberOfBytes = file.size;
-  // Return true if size is below 4 Mo and type is jpg or png. False otherwise.
+  // RENVOIE VRAI SI LA TAILLE EST INFERIEUR A 4 Mo ET QUE LE TYPE EST JPG OU PNG. REVOIE FAUX SINON
   return ((numberOfBytes / 1048576).toFixed(1) < 4 && /jpeg|png/.test(imgUploadedType));
 
 }
@@ -357,7 +359,7 @@ function previewImage(file) {
   filePreview.innerHTML = "";
   document.querySelector(".file-box").classList.add("file-box__preview");
   
-  // Code from MDN https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications#example_showing_thumbnails_of_user-selected_images
+  // https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications#example_showing_thumbnails_of_user-selected_images
   const reader = new FileReader();
   reader.onload = (e) => {
     img.src = e.target.result;
@@ -368,14 +370,14 @@ function previewImage(file) {
 }
   
 function enableSubmit(a,b,c,d) {
-  // If all fields ok store values in variables
+  // SI TOUS LES CHAMPS SONT OK ON ENREGISTRE LES VALEURS DANS DES VARIABLES ET ON AUTORISE LE CHAMP VALIDER
   if(a && !!b && !!c) {
     imgFile = a;
     workTitle = b;
     workCat = c;
     d.removeAttribute("disabled");
   }
-  // if not disabling submit
+  // SINON ON DESACTIVE LE CHAMP VALIDER
   else d.setAttribute("disabled","");
 }
 
