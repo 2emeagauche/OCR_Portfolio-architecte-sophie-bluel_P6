@@ -267,13 +267,16 @@ function feedModalWithAddForm(contentZone) {
   }, {once:true});
     
   const theForm = document.getElementById("add-work-form");
+
   // LE BOUTON DE SOUMISSION EST DESACTIVE PAR DEFAUT
   // LA FONCTION "checkForm" VERIFIE QUE TOUS LES CHAMPS SONT OK ET ACTIVE LE BOUTON DE SOUMISSION
   checkForm(theForm);
+
   // ON A PAS BESOIN D'ATTENDRE LA VALIDATION POUR CREER LE COMPORTEMENT DE SOUMISSION
   theForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     let responseStatus = NaN;
+
     // SI LE TOKEN N'EST PAS EXPIRE ON REQUETE L'API POUR AJOUTER LE PROJET
     if(isTokenGood()) {
       const response = await addWork(imgFile, workTitle, workCat, token)
@@ -281,6 +284,7 @@ function feedModalWithAddForm(contentZone) {
         responseStatus = response.status;
         return response.json();
       });
+
       // QUAND L'API RENVOI UN STATUT 2** CELA CONFIRME QUE LE PROJET A ETE AJOUTE EN BASE
       // - ON AJOUTE LE PROJET A LA GALERIE DE LA PAGE D'ACCUEIL
       // - ON MET A JOUR LA TABLEAU "allWorks" EN REFESANT UNE REQUETE A L'API (SI ON RETOURNE A L'ETAPE 1 LA MODAL SE MET A JOUR)
@@ -290,6 +294,7 @@ function feedModalWithAddForm(contentZone) {
         allWorks = await getAllWorks();
         if(window.confirm("L'élément a été ajouté avec succès. Continuer ?")) resetForm(theForm);
         else closingModal(adminModal);
+
       // SI L'API NE RENVOIE PAS UN STATUT 2** ON AFFICHE LE CODE ERREUR OU ERREUR INCONNUE
       } else {
         alert("Erreur : " + responseStatus || "inconnue");
@@ -309,7 +314,9 @@ function checkForm(theform) {
   const filePreview = theform.querySelector(".file-preview");
   
   // ON VERIFIE LE CHAMP FILE SUR L'EVENEMENT CHANGE
+
   fileElt.addEventListener("change", (e) => {
+
     // ON RESET LE HTML SI CE N'EST PAS LA PREMIERE FOIS
     // - CAS OU ON VEUX CHANGER D'IMAGE
     if(filePreview.hasChildNodes()) {
@@ -320,10 +327,13 @@ function checkForm(theform) {
     if(theform.querySelector(".img-error-msg") !== null) theform.querySelector(".img-error-msg").remove();
 
     // VERIFICATION DU POIDS ET DU TYPE D'IMAGE. SI OK AFFICHAGE D'UNE PREVISUALISATION
+
     if(checkImage(fileElt)) {
       previewImage(fileElt.files[0]);
+
       // ON VERIFIE TOUS LES CHAMPS POUR POUVOIR ACTIVER LE BOUTON VALIDER
       enableSubmit(fileElt.files[0], titleElt.value, categoryElt.value, submitElt);
+      
     // SINON AFFICHE DU MESSAGE D'ERREUR
     } else {
       displayImgErrorMsg(specsText);
@@ -348,6 +358,7 @@ function checkImage(fileElt) {
   const file = fileElt.files[0];
   imgUploadedType = file.type;
   numberOfBytes = file.size;
+
   // RENVOIE VRAI SI LA TAILLE EST INFERIEUR A 4 Mo ET QUE LE TYPE EST JPG OU PNG. REVOIE FAUX SINON
   return ((numberOfBytes / 1048576).toFixed(1) < 4 && /jpeg|png/.test(imgUploadedType));
 
@@ -370,6 +381,7 @@ function previewImage(file) {
 }
   
 function enableSubmit(a,b,c,d) {
+
   // SI TOUS LES CHAMPS SONT OK ON ENREGISTRE LES VALEURS DANS DES VARIABLES ET ON AUTORISE LE CHAMP VALIDER
   if(a && !!b && !!c) {
     imgFile = a;
