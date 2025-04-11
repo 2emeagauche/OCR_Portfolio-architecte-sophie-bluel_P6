@@ -1,5 +1,5 @@
 // const apiLocalPath = "http://localhost:5678/api";
-const apiLocalPath = "https://ocr-portfolio-architecte-sophie-bluel-p6.onrender.com/api";
+const apiLocalPath = "https://web-production-ded9.up.railway.app";
 
 const portfolioElement = document.querySelector("#portfolio");
 const galleryElement = document.querySelector(".gallery");
