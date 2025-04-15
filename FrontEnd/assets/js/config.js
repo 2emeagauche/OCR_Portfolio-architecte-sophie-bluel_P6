@@ -1,5 +1,5 @@
 // const apiLocalPath = "http://localhost:5678/api";
-const apiLocalPath = "https://web-production-ded9.up.railway.app/api";
+const apiLocalPath = "https://ocrportfolio-architecte-sophie-production.up.railway.app/api";
 
 const portfolioElement = document.querySelector("#portfolio");
 const galleryElement = document.querySelector(".gallery");
